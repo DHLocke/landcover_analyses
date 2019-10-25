@@ -110,4 +110,6 @@ plot_model(p_tree_mod, type = 'pred')        # standardized effects, in units of
 
 plot_model(p_tree_mod, type = 'diag')        # standardized effects, in units of standard deviations
 
+# end
+# Fri Oct 25 11:10:50 2019 ------------------------------
 
