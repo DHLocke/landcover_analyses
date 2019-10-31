@@ -111,7 +111,20 @@ plot_model(p_tree_mod, type = 'pred')        # standardized effects, in units of
 
 plot_model(p_tree_mod, type = 'diag')        # standardized effects, in units of standard deviations
 
+# TODO HD: copy "p_tree_mod" but for the other dependent variables like
+# "Perc_Grass"
 
-
-# Fri Oct 25 11:10:50 2019 ------------------------------
+# TODO HD: add other models to this tabular display
+tab_model(p_tree_mod,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= '% Tree Canopy Cover',
+          pred.labels = c('(Intercept)',
+                          'Median Household Income',
+                          '% non-White population',
+                          '% Hispanic population',
+                          '% Owner Occupied Housing',
+                          'Housing Age',
+                          'Terrain Roughness'))
+# end
 
