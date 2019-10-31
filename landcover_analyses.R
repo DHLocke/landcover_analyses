@@ -21,13 +21,14 @@ library(ggpubr)         # mixes base stats functions with ggplot graphics, its g
 # read in the data
 # you will have to change the file path to match the location of the data
 # on your computer
-sf <- read_sf('/Users/dlocke/temp_MSB4RoyChowdhuryDobler/CBGs/CBG_ALL_v20161014.shp') # this "verbose = TRUE" argument isn't really needed
-      
+#sf <- read_sf('/Users/dlocke/temp_MSB4RoyChowdhuryDobler/CBGs/CBG_ALL_v20161014.shp') 
+sf <- read_sf('D:/Macrobio/blockgroup_landcover/CBG_ALL_v20161014.shp')
+
 # These data were in that folder so I could share easily with Carlos
 # but I'm keeping the R project locally here now:
 getwd()               # "/Users/dlocke/msb/LandCoverPaper/landcover_analyses"
 
-# take a look at the data
+# take a look at the data of cbg
 sf
 names(sf)
 
