@@ -28,7 +28,7 @@ sf <- read_sf('D:/Macrobio/blockgroup_landcover/CBG_ALL_v20161014.shp')
 # but I'm keeping the R project locally here now:
 getwd()               # "/Users/dlocke/msb/LandCoverPaper/landcover_analyses"
 
-# take a look at the data
+# take a look at the data of cbg
 sf
 names(sf)
 
