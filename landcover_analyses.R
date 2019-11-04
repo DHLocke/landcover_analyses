@@ -222,9 +222,6 @@ df %>% mutate(city_urban = paste(MSA, Urbanicity, sep = '_')) %>% # new city - u
             legend = '')
 #end
 
-#Q: 1. stat_compare_means() -> city_tree_plot# answers the question "are thes medians different from eachother" print the graphic, noticed we assigned with "->" at the end?
-#Why it is reversly placed? I tried keeping city_tree first and assigning. It dint work.
 
-#2. How do we know in pairwise comparison which one are similar or different?
-#3. In the last two parts of the scripts, both cities and urbanicities are held as independent variables. How do we know which pairs are similar or not?
+
 
