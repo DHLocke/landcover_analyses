@@ -84,8 +84,7 @@ help(table) # to see what the "useNA" argument is for
 # categorical analyses
 
 
-# continuous analyses
-# but first lets scale the predictors, grand-mean scaling
+# continuous analyses but first lets scale the predictors, grand-mean scaling
 df$Median_Household_Income <- scale(df$INC_MED_HS, center = T)
 df$Perc_nonWhite           <- scale(I(100 - df$P_White), center = T)
 df$Perc_Hispanic           <- scale(df$P_Hisp, center = T)
