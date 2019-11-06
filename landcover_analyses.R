@@ -82,6 +82,7 @@ help(table) # to see what the "useNA" argument is for
 
 
 # categorical analyses
+<<<<<<< HEAD
 
 
 # continuous analyses but first lets scale the predictors, grand-mean scaling
@@ -185,6 +186,8 @@ tab_model(p_grass_mod,
 
 #end
 
+=======
+>>>>>>> 8e159ba5615402156adf1ac6f8989a40c2ab7880
 # good for colors
 library(RColorBrewer)
 RColorBrewer::display.brewer.all() # great website http://colorbrewer2.org ! 
@@ -277,7 +280,52 @@ df %>% mutate(city_urban = paste(MSA, Urbanicity, sep = '_')) %>% # new city - u
             xlab = 'Metropolitan Statistical Area',
             #add = 'jitter',  # Try turning this on and off with "#"
             legend = '')
-#end
+
+# continuous analyses
+# but first lets scale the predictors, grand-mean scaling
+df$INC_MED_HS_s <- scale(df$INC_MED_HS, center = T)
+df$P_nonWhite_s <- scale(I(100 - df$P_White), center = T)
+df$P_Hisp_s     <- scale(df$P_Hisp, center = T)
+df$P_Own_s      <- scale(df$P_Own, center = T)
+df$HOUS_AGE_s   <- scale(df$HOUS_AGE, center = T)
+df$SDE_STD_s    <- scale(df$SDE_STD, center = T)
+
+p_tree_mod <- lmer(Perc_Tree ~ INC_MED_HS_s + # fixed effects
+                     P_nonWhite_s +
+                     P_Hisp_s + 
+                     P_Own_s +
+                     HOUS_AGE_s + 
+                     SDE_STD_s +
+                    (1 | MSA),                               # random effects
+                   data = df)
+
+plot_model(p_tree_mod)                      # coefficients, defaults to "est"
+plot_model(p_tree_mod) + theme_bw()         # better display?
+plot_model(p_tree_mod) + theme_bw(20)       # BIGGER lables, see 
+
+plot_model(p_tree_mod, type = 're')         # random effects
+plot_model(p_tree_mod, type = 'std')        # standardized effects, in units of standard deviations
+plot_model(p_tree_mod, type = 'pred')        # standardized effects, in units of standard deviations
+
+plot_model(p_tree_mod, type = 'diag')        # standardized effects, in units of standard deviations
+
+# TODO HD: copy "p_tree_mod" but for the other dependent variables like
+# "Perc_Grass"
+
+# TODO HD: add other models to this tabular display
+tab_model(p_tree_mod,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= '% Tree Canopy Cover',
+          pred.labels = c('(Intercept)',
+                          'Median Household Income',
+                          '% non-White population',
+                          '% Hispanic population',
+                          '% Owner Occupied Housing',
+                          'Housing Age',
+                          'Terrain Roughness'))
+# end
+
 
 
 
