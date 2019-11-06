@@ -17,6 +17,7 @@ library(sf)             # used for reading shapefiles
 library(sjPlot)         # nice graphs and tables supporting many models
 library(lme4)           # fits multi-level models
 library(ggpubr)         # mixes base stats functions with ggplot graphics, its great!
+   
 
 # read in the data
 # you will have to change the file path to match the location of the data
@@ -85,19 +86,19 @@ help(table) # to see what the "useNA" argument is for
 
 # continuous analyses
 # but first lets scale the predictors, grand-mean scaling
-df$INC_MED_HS_s <- scale(df$INC_MED_HS, center = T)
-df$P_nonWhite_s <- scale(I(100 - df$P_White), center = T)
-df$P_Hisp_s     <- scale(df$P_Hisp, center = T)
-df$P_Own_s      <- scale(df$P_Own, center = T)
-df$HOUS_AGE_s   <- scale(df$HOUS_AGE, center = T)
-df$SDE_STD_s    <- scale(df$SDE_STD, center = T)
+df$Median_Household_Income <- scale(df$INC_MED_HS, center = T)
+df$Perc_nonWhite           <- scale(I(100 - df$P_White), center = T)
+df$Perc_Hispanic           <- scale(df$P_Hisp, center = T)
+df$Perc_Own_House          <- scale(df$P_Own, center = T)
+df$Housing_Age             <- scale(df$HOUS_AGE, center = T)
+df$Terrain_Roughness       <- scale(df$SDE_STD, center = T)
 
-p_tree_mod <- lmer(Perc_Tree ~ INC_MED_HS_s + # fixed effects
-                     P_nonWhite_s +
-                     P_Hisp_s + 
-                     P_Own_s +
-                     HOUS_AGE_s + 
-                     SDE_STD_s +
+p_tree_mod <- lmer(Perc_Tree ~ Median_Household_Income + # fixed effects
+                     Perc_nonWhite +
+                     Perc_Hispanic + 
+                     Perc_Own_House +
+                     Housing_Age + 
+                     Terrain_Roughness +
                     (1 | MSA),                               # random effects
                    data = df)
 
@@ -107,9 +108,24 @@ plot_model(p_tree_mod) + theme_bw(20)       # BIGGER lables, see
 
 plot_model(p_tree_mod, type = 're')         # random effects
 plot_model(p_tree_mod, type = 'std')        # standardized effects, in units of standard deviations
-plot_model(p_tree_mod, type = 'pred')        # standardized effects, in units of standard deviations
+plot_model(p_tree_mod, type = 'pred')       # standardized effects, in units of standard deviations
 
-plot_model(p_tree_mod, type = 'diag')        # standardized effects, in units of standard deviations
+plot_model(p_tree_mod, type = 'diag')       # standardized effects, in units of standard deviations
+
+#Plot model with forest-plot of estimates
+plot_model(p_grass_mod, title = "Continuous Tree model" )
+
+#Plot saved as image (png) file
+ggplot2::ggsave(file="Continuous Tree model.png",
+                width=90, height=150, units = "mm")
+
+#Plot model with random effects
+plot_model(p_tree_mod, type = 're', title = "Random effects of Tree model")
+ggplot2::ggsave(file="Random Effects of Tree model.png",
+                width=90, height=150, units = "mm")
+
+#Plot model to check model assumptions
+plot_model(p_grass_mod, type = 'diag')
 
 # TODO HD: copy "p_tree_mod" but for the other dependent variables like
 # "Perc_Grass"
@@ -126,6 +142,48 @@ tab_model(p_tree_mod,
                           '% Owner Occupied Housing',
                           'Housing Age',
                           'Terrain Roughness'))
+
+
+#Grass Model (Hillol):
+
+p_grass_mod <- lmer(Perc_Grass ~ Median_Household_Income+
+                     Perc_nonWhite +
+                     Perc_Hispanic + 
+                     Perc_Own_House +
+                     Housing_Age + 
+                     Terrain_Roughness +
+                     (1 | MSA),                               
+                   data = df) 
+
+#Plot model with forest-plot of estimates
+plot_model(p_grass_mod, title = "Continuous Grass model" )
+
+#Plot saved as image (png) file
+ggplot2::ggsave(file="Continuous Grass model.png",
+                width=90, height=150, units = "mm")
+
+#Plot model with random effects
+plot_model(p_grass_mod, type = 're', title = "Random effects of Grass model")
+ggplot2::ggsave(file="Random Effects of Grass model.png",
+                width=90, height=150, units = "mm")
+
+#Plot model to check model assumptions
+plot_model(p_grass_mod, type = 'diag')
+
+#table
+tab_model(p_grass_mod,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= '% Grass Cover',
+          pred.labels = c('(Intercept)',
+                          'Median Household Income',
+                          '% non-White population',
+                          '% Hispanic population',
+                          '% Owner Occupied Housing',
+                          'Housing Age',
+                          'Terrain Roughness'))
+
+
 # end
 
 # good for colors
