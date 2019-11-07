@@ -186,8 +186,8 @@ tab_model(p_grass_mod,
 
 #end
 
-=======
->>>>>>> 8e159ba5615402156adf1ac6f8989a40c2ab7880
+
+
 # good for colors
 library(RColorBrewer)
 RColorBrewer::display.brewer.all() # great website http://colorbrewer2.org ! 
