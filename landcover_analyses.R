@@ -183,7 +183,83 @@ tab_model(p_grass_mod,
                           'Housing Age',
                           'Terrain Roughness'))
 
+#Other Landcover Model (Hillol):
 
+p_other_mod <- lmer(Perc_Other ~ Median_Household_Income+
+                      Perc_nonWhite +
+                      Perc_Hispanic + 
+                      Perc_Own_House +
+                      Housing_Age + 
+                      Terrain_Roughness +
+                      (1 | MSA),                               
+                    data = df) 
+
+#Plot model with forest-plot of estimates
+plot_model(p_other_mod, title = "Continuous Other Lancover model" )
+
+#Plot saved as image (png) file
+ggplot2::ggsave(file="Continuous Other Landcover model.png",
+                width=90, height=150, units = "mm")
+
+#Plot model with random effects
+plot_model(p_other_mod, type = 're', title = "Random effects of Othe Landcover model")
+ggplot2::ggsave(file="Random Effects of Other Landcover model.png",
+                width=90, height=150, units = "mm")
+
+#Plot model to check model assumptions
+plot_model(p_other_mod, type = 'diag')
+
+#table
+tab_model(p_other_mod,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= '% Other Landcover',
+          pred.labels = c('(Intercept)',
+                          'Median Household Income',
+                          '% non-White population',
+                          '% Hispanic population',
+                          '% Owner Occupied Housing',
+                          'Housing Age',
+                          'Terrain Roughness'))
+
+#Water Model (Hillol):
+
+p_other_mod <- lmer(Perc_Water ~ Median_Household_Income+
+                      Perc_nonWhite +
+                      Perc_Hispanic + 
+                      Perc_Own_House +
+                      Housing_Age + 
+                      Terrain_Roughness +
+                      (1 | MSA),                               
+                    data = df) 
+
+#Plot model with forest-plot of estimates
+plot_model(p_other_mod, title = "Continuous Water model" )
+
+#Plot saved as image (png) file
+ggplot2::ggsave(file="Continuous Water model.png",
+                width=90, height=150, units = "mm")
+
+#Plot model with random effects
+plot_model(p_other_mod, type = 're', title = "Random effects of Water model")
+ggplot2::ggsave(file="Random Effects of Water model.png",
+                width=90, height=150, units = "mm")
+
+#Plot model to check model assumptions
+plot_model(p_other_mod, type = 'diag')
+
+#table
+tab_model(p_other_mod,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= '% Water areas',
+          pred.labels = c('(Intercept)',
+                          'Median Household Income',
+                          '% non-White population',
+                          '% Hispanic population',
+                          '% Owner Occupied Housing',
+                          'Housing Age',
+                          'Terrain Roughness'))
 #end
 
 
