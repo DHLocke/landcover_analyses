@@ -117,12 +117,12 @@ plot_model(p_grass_mod, title = "Continuous Tree model" )
 
 #Plot saved as image (png) file
 ggplot2::ggsave(file="Continuous Tree model.png",
-                width=90, height=150, units = "mm")
+                width=120, height=150, units = "mm")
 
 #Plot model with random effects
 plot_model(p_tree_mod, type = 're', title = "Random effects of Tree model")
 ggplot2::ggsave(file="Random Effects of Tree model.png",
-                width=90, height=150, units = "mm")
+                width=120, height=150, units = "mm")
 
 #Plot model to check model assumptions
 plot_model(p_grass_mod, type = 'diag')
@@ -160,12 +160,12 @@ plot_model(p_grass_mod, title = "Continuous Grass model" )
 
 #Plot saved as image (png) file
 ggplot2::ggsave(file="Continuous Grass model.png",
-                width=90, height=150, units = "mm")
+                width=120, height=150, units = "mm")
 
 #Plot model with random effects
 plot_model(p_grass_mod, type = 're', title = "Random effects of Grass model")
 ggplot2::ggsave(file="Random Effects of Grass model.png",
-                width=90, height=150, units = "mm")
+                width=120, height=150, units = "mm")
 
 #Plot model to check model assumptions
 plot_model(p_grass_mod, type = 'diag')
@@ -199,12 +199,12 @@ plot_model(p_other_mod, title = "Continuous Other Lancover model" )
 
 #Plot saved as image (png) file
 ggplot2::ggsave(file="Continuous Other Landcover model.png",
-                width=90, height=150, units = "mm")
+                width=120, height=150, units = "mm")
 
 #Plot model with random effects
 plot_model(p_other_mod, type = 're', title = "Random effects of Othe Landcover model")
 ggplot2::ggsave(file="Random Effects of Other Landcover model.png",
-                width=90, height=150, units = "mm")
+                width=120, height=150, units = "mm")
 
 #Plot model to check model assumptions
 plot_model(p_other_mod, type = 'diag')
@@ -238,12 +238,12 @@ plot_model(p_other_mod, title = "Continuous Water model" )
 
 #Plot saved as image (png) file
 ggplot2::ggsave(file="Continuous Water model.png",
-                width=90, height=150, units = "mm")
+                width=120, height=150, units = "mm")
 
 #Plot model with random effects
 plot_model(p_other_mod, type = 're', title = "Random effects of Water model")
 ggplot2::ggsave(file="Random Effects of Water model.png",
-                width=90, height=150, units = "mm")
+                width=120, height=150, units = "mm")
 
 #Plot model to check model assumptions
 plot_model(p_other_mod, type = 'diag')
@@ -253,6 +253,84 @@ tab_model(p_other_mod,
           ci.hyphen = ' to ',
           show.ngroups = TRUE,
           dv.labels= '% Water areas',
+          pred.labels = c('(Intercept)',
+                          'Median Household Income',
+                          '% non-White population',
+                          '% Hispanic population',
+                          '% Owner Occupied Housing',
+                          'Housing Age',
+                          'Terrain Roughness'))
+
+#Mean patch area Tree Model (Hillol):
+
+MPT_mod <- lmer(MPA_T ~ Median_Household_Income+
+                      Perc_nonWhite +
+                      Perc_Hispanic + 
+                      Perc_Own_House +
+                      Housing_Age + 
+                      Terrain_Roughness +
+                      (1 | MSA),                               
+                    data = df) 
+
+#Plot model with forest-plot of estimates
+plot_model(MPT_mod, title = "Mean Patch Area Tree model" )
+
+#Plot saved as image (png) file
+ggplot2::ggsave(file="Mean Patch Area Tree model.png",
+                width=120, height=150, units = "mm")
+
+#Plot model with random effects
+plot_model(MPT_mod, type = 're', title = "Random effects of Mean Patch Area Tree model")
+ggplot2::ggsave(file="Random Effects of Mean Patch Area Tree model.png",
+                width=120, height=150, units = "mm")
+
+#Plot model to check model assumptions
+plot_model(MPT_mod, type = 'diag')
+
+#table
+tab_model(MPT_mod,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Mean Patch areas-Tree',
+          pred.labels = c('(Intercept)',
+                          'Median Household Income',
+                          '% non-White population',
+                          '% Hispanic population',
+                          '% Owner Occupied Housing',
+                          'Housing Age',
+                          'Terrain Roughness'))
+
+#Mean patch area Grass Model (Hillol):
+
+MPG_mod <- lmer(MPA_G ~ Median_Household_Income+
+                  Perc_nonWhite +
+                  Perc_Hispanic + 
+                  Perc_Own_House +
+                  Housing_Age + 
+                  Terrain_Roughness +
+                  (1 | MSA),                               
+                data = df) 
+
+#Plot model with forest-plot of estimates
+plot_model(MPG_mod, title = "Mean Patch Area Grass model" )
+
+#Plot saved as image (png) file
+ggplot2::ggsave(file="Mean Patch Area Grass model.png",
+                width=120, height=150, units = "mm")
+
+#Plot model with random effects
+plot_model(MPG_mod, type = 're', title = "Random effects of Mean Patch Area Grass model")
+ggplot2::ggsave(file="Random Effects of Mean Patch Area Grass model.png",
+                width=120, height=150, units = "mm")
+
+#Plot model to check model assumptions
+plot_model(MPG_mod, type = 'diag')
+
+#table
+tab_model(MPG_mod,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Mean Patch areas-Grass',
           pred.labels = c('(Intercept)',
                           'Median Household Income',
                           '% non-White population',
@@ -357,51 +435,7 @@ df %>% mutate(city_urban = paste(MSA, Urbanicity, sep = '_')) %>% # new city - u
             #add = 'jitter',  # Try turning this on and off with "#"
             legend = '')
 
-# continuous analyses
-# but first lets scale the predictors, grand-mean scaling
-df$INC_MED_HS_s <- scale(df$INC_MED_HS, center = T)
-df$P_nonWhite_s <- scale(I(100 - df$P_White), center = T)
-df$P_Hisp_s     <- scale(df$P_Hisp, center = T)
-df$P_Own_s      <- scale(df$P_Own, center = T)
-df$HOUS_AGE_s   <- scale(df$HOUS_AGE, center = T)
-df$SDE_STD_s    <- scale(df$SDE_STD, center = T)
-
-p_tree_mod <- lmer(Perc_Tree ~ INC_MED_HS_s + # fixed effects
-                     P_nonWhite_s +
-                     P_Hisp_s + 
-                     P_Own_s +
-                     HOUS_AGE_s + 
-                     SDE_STD_s +
-                    (1 | MSA),                               # random effects
-                   data = df)
-
-plot_model(p_tree_mod)                      # coefficients, defaults to "est"
-plot_model(p_tree_mod) + theme_bw()         # better display?
-plot_model(p_tree_mod) + theme_bw(20)       # BIGGER lables, see 
-
-plot_model(p_tree_mod, type = 're')         # random effects
-plot_model(p_tree_mod, type = 'std')        # standardized effects, in units of standard deviations
-plot_model(p_tree_mod, type = 'pred')        # standardized effects, in units of standard deviations
-
-plot_model(p_tree_mod, type = 'diag')        # standardized effects, in units of standard deviations
-
-# TODO HD: copy "p_tree_mod" but for the other dependent variables like
-# "Perc_Grass"
-
-# TODO HD: add other models to this tabular display
-tab_model(p_tree_mod,
-          ci.hyphen = ' to ',
-          show.ngroups = TRUE,
-          dv.labels= '% Tree Canopy Cover',
-          pred.labels = c('(Intercept)',
-                          'Median Household Income',
-                          '% non-White population',
-                          '% Hispanic population',
-                          '% Owner Occupied Housing',
-                          'Housing Age',
-                          'Terrain Roughness'))
-# end
-
+#end
 
 
 
