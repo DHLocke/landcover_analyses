@@ -82,7 +82,7 @@ help(table) # to see what the "useNA" argument is for
 
 
 # categorical analyses
-<<<<<<< HEAD
+< HEAD
 
 
 # continuous analyses but first lets scale the predictors, grand-mean scaling
@@ -338,6 +338,162 @@ tab_model(MPG_mod,
                           '% Owner Occupied Housing',
                           'Housing Age',
                           'Terrain Roughness'))
+
+#Number of patch area Tree Model (Hillol):
+
+NPT_mod <- lmer(NP_T ~ Median_Household_Income+
+                  Perc_nonWhite +
+                  Perc_Hispanic + 
+                  Perc_Own_House +
+                  Housing_Age + 
+                  Terrain_Roughness +
+                  (1 | MSA),                               
+                data = df) 
+
+#Plot model with forest-plot of estimates
+plot_model(NPT_mod, title = "Mean Patch Area Tree model" )
+
+#Plot saved as image (png) file
+ggplot2::ggsave(file="Mean Patch Area Tree model.png",
+                width=120, height=150, units = "mm")
+
+#Plot model with random effects
+plot_model(NPT_mod, type = 're', title = "Random effects of Mean Patch Area Tree model")
+ggplot2::ggsave(file="Random Effects of Mean Patch Area Tree model.png",
+                width=120, height=150, units = "mm")
+
+#Plot model to check model assumptions
+plot_model(NPT_mod, type = 'diag')
+
+#table
+tab_model(NPT_mod,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Number of Patch areas-Tree',
+          pred.labels = c('(Intercept)',
+                          'Median Household Income',
+                          '% non-White population',
+                          '% Hispanic population',
+                          '% Owner Occupied Housing',
+                          'Housing Age',
+                          'Terrain Roughness'))
+
+#Number of Grass Patch Area Model (Hillol):
+
+NPG_mod <- lmer(NP_G ~ Median_Household_Income+
+                  Perc_nonWhite +
+                  Perc_Hispanic + 
+                  Perc_Own_House +
+                  Housing_Age + 
+                  Terrain_Roughness +
+                  (1 | MSA),                               
+                data = df) 
+
+#Plot model with forest-plot of estimates
+plot_model(NPG_mod, title = "Number of Grass Patch Area model" )
+
+#Plot saved as image (png) file
+ggplot2::ggsave(file="Number of Grass Patch Area model.png",
+                width=120, height=150, units = "mm")
+
+#Plot model with random effects
+plot_model(NPG_mod, type = 're', title = "Random effects of Number of Grass Patch Area model")
+ggplot2::ggsave(file="Random Effects of Number of Grass Patch Area model.png",
+                width=120, height=150, units = "mm")
+
+#Plot model to check model assumptions
+plot_model(NPG_mod, type = 'diag')
+
+#table
+tab_model(NPG_mod,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Number of Patch areas-Grass',
+          pred.labels = c('(Intercept)',
+                          'Median Household Income',
+                          '% non-White population',
+                          '% Hispanic population',
+                          '% Owner Occupied Housing',
+                          'Housing Age',
+                          'Terrain Roughness'))
+
+#Perimeter-Area ratio of Tree canopy Model (Hillol):
+
+PART_mod <- lmer(PAratio_T ~ Median_Household_Income+
+                  Perc_nonWhite +
+                  Perc_Hispanic + 
+                  Perc_Own_House +
+                  Housing_Age + 
+                  Terrain_Roughness +
+                  (1 | MSA),                               
+                data = df) 
+
+#Plot model with forest-plot of estimates
+plot_model(PART_mod, title = "Perimeter-Area ratio of Tree canopy model" )
+
+#Plot saved as image (png) file
+ggplot2::ggsave(file="Perimeter-Area ratio of Tree canopy model.png",
+                width=120, height=150, units = "mm")
+
+#Plot model with random effects
+plot_model(PART_mod, type = 're', title = "Random effects of Perimeter-Area ratio of Tree canopy model")
+ggplot2::ggsave(file="Random Effects of Perimeter-Area ratio of Tree canopy model.png",
+                width=120, height=150, units = "mm")
+
+#Plot model to check model assumptions
+plot_model(PART_mod, type = 'diag')
+
+#table
+tab_model(PART_mod,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Perimeter-Area ratio of Tree canopy',
+          pred.labels = c('(Intercept)',
+                          'Median Household Income',
+                          '% non-White population',
+                          '% Hispanic population',
+                          '% Owner Occupied Housing',
+                          'Housing Age',
+                          'Terrain Roughness'))
+
+#Perimeter-Area ratio of Grass Model (Hillol):
+
+PARG_mod <- lmer(PAratio_G ~ Median_Household_Income+
+                   Perc_nonWhite +
+                   Perc_Hispanic + 
+                   Perc_Own_House +
+                   Housing_Age + 
+                   Terrain_Roughness +
+                   (1 | MSA),                               
+                 data = df) 
+
+#Plot model with forest-plot of estimates
+plot_model(PARG_mod, title = "Perimeter-Area ratio of Grass model" )
+
+#Plot saved as image (png) file
+ggplot2::ggsave(file="Perimeter-Area ratio of Grass model.png",
+                width=120, height=150, units = "mm")
+
+#Plot model with random effects
+plot_model(PARG_mod, type = 're', title = "Random effects of Perimeter-Area ratio of Grass model")
+ggplot2::ggsave(file="Random Effects of Perimeter-Area ratio of Grass model.png",
+                width=120, height=150, units = "mm")
+
+#Plot model to check model assumptions
+plot_model(PARG_mod, type = 'diag')
+
+#table
+tab_model(PARG_mod,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Perimeter-Area ratio of Grass',
+          pred.labels = c('(Intercept)',
+                          'Median Household Income',
+                          '% non-White population',
+                          '% Hispanic population',
+                          '% Owner Occupied Housing',
+                          'Housing Age',
+                          'Terrain Roughness'))                   'Terrain Roughness'))
 #end
 
 
