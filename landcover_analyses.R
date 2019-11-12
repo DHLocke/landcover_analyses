@@ -20,6 +20,10 @@ library(ggpubr)         # mixes base stats functions with ggplot graphics, its g
 library(RColorBrewer)   # good for colors
 library(cowplot)        # for multi-paned graphs NOTE THAT THIS MASKS ggplot2::ggsave()!!
 
+# at the end lets make sure to do
+citation('tidyverse') # but for each package. There is a package called grateful that is supposed to help with 
+                      # citing each package but its kind of glitchy
+
 # read in the data
 # you will have to change the file path to match the location of the data
 # on your computer
@@ -224,6 +228,20 @@ p_tree_mod <- lmer(Perc_Tree ~ Median_Household_Income + # fixed effects
                     (1 | MSA),                               # random effects
                    data = df)
 
+# FIXME LMER is 'wrong' because of the distribution of Perc_Tree - still need to fix this
+# df$pct_tree <- (df$Perc_Tree / 100) + 0.0001
+# par(mfrow=c(1, 2)); hist(df$Perc_Tree); hist(df$pct_tree)
+# p_tree_mod <- glmmTMB::glmmTMB(pct_tree ~ Median_Household_Income + # fixed effects # just being very verbose with "::"
+#                      Percent_nonWhite +
+#                      Percent_Hispanic + 
+#                      Percent_Own_House +
+#                      Housing_Age + 
+#                      Terrain_Roughness +
+#                      (1 | MSA),                               # random effects
+#                      data = df,
+#                      family = beta_family())
+
+
 # # these wre just examples to show how to display the different output types, so I'm turning them "off' with #
 # plot_model(p_tree_mod)                      # coefficients, defaults to "est"
 # plot_model(p_tree_mod) + theme_bw()         # better display?
@@ -237,12 +255,16 @@ p_tree_mod <- lmer(Perc_Tree ~ Median_Household_Income + # fixed effects
 
 # Plot model with forest-plot of estimates
 # plot_model(p_tree_mod, title = "Continuous Tree model" ) # not really an helpful title
+
+# see additional options here:
+# https://strengejacke.github.io/sjPlot/articles/plot_model_estimates.html
+# its fun to copy the examples and improve upon them
 p_fe <- plot_model(p_tree_mod,                                      # save the model in "p_fe", short for Plot Fixed Effects
                    type = 'est',                                    # more explcit that accepting the defaults
-                   title = 'Tree Canopy Cover (%)\nfixed effects',  # "\n" means "new line"
+                   title = 'Tree Canopy Cover (%):\nfixed effects', # "\n" means "new line"
                    sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
                    vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
-  theme_bw(18)                                                      # number here referes to font size
+  theme_bw(10)                                                      # number pertains to font size
 
 # peak at the graph
 p_fe
@@ -250,325 +272,482 @@ p_fe
 # random effects: p_tree_mod
 p_re <- plot_model(p_tree_mod,                                     # save the model in "p_re", short for Plot RANDOM Effects
                    type = 're',                                    # more explcit that accepting the defaults
-                   title = 'Tree Canopy Cover (%)\nrandom effects',  # "\n" means "new line"
-                   #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   title = 'Tree Canopy Cover (%):\nrandom effects',# "\n" means "new line"
+                   #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
                    vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
-  theme_bw(18)                                                      # number here referes to font size
+  theme_bw(10)                                                      # number pertains to font size
 
 # peak at the graph
 p_re
 
 # combine the two graphs into one two-pane graph
-plot_grid(p_fe, # fixed effects, p_tree_mod,
-          p_re, # random effects, p_tree_mod,
-          labels = c('A', 'B'))
+p_tree_graph <- plot_grid(p_fe, # fixed effects, p_tree_mod,
+                          p_re, # random effects, p_tree_mod,
+                          labels = c('A', 'B'))
+# looks great!
+p_tree_graph
+
+# save this out
+ggplot2::ggsave(plot = p_tree_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/p_tree_canopy_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                         width  = 6.5, # this is  as wide as a normal Word Doc page
+                         height = 2.5, # I had to play with this A LOT to get this to look right
+                                       # the Plots tab in RStudio is not representative of what the
+                                       # the saved version will look like
+                units = 'in')
+
+# Ok so that was A LOT of tricks at once. Lets slow this down!
+# recall the :: notation means package::function. Both ggplot2 and cowplot have functions
+# called "ggsave", we are using the ggplot2 version.
+
+# paste0() combines text without spaces, its like:
+# paste('string 1', 'more random text', sep='') is the same as
+# paste0('string 1', 'more random text')
+
+# another example
+paste('Hillol', 'Dutta,', 'PhD student', 'at Clark University', sep = ' ')
+paste('Hillol', 'Dutta,', 'PhD student', 'at Clark University', sep = ',') # strange, too many commas
+paste0('Hillol', 'Dutta,', 'PhD student', 'at Clark University') # not enough spaces!
+paste0('Hillol ', 'Dutta, ', 'PhD student ', 'at Clark University') # 'manually added spaces
+
+# so 
+paste0(getwd(), '/graphs/p_tree_canopy')
+
+# gives me "/Users/dlocke/msb/LandCoverPaper/landcover_analyses/graphs/p_tree_canopy"
+# and should give you "C:/Users/HDutta/Documents/Hillol_LCAnalyses/landcover_analyses/graphs/p_tree_canopy"
+
+Sys.time() # gives the date and time in
+           # "YYYY-MM-DD HH:MM:SS EST" format (EST is whatever time zone you have your machine set to), where
+           # YYYY is year in 4-digit year, MM is two-digit month, DD days.. 
+           # because it will never be the same time twice, our graphs will never overwrite the old file
+
+#gsub()     # does Global SUBstitutions. Its like find and replace, see
+help(gsub)
+
+# '[[:punct:]]' # is part of regular expressions, which are very powerful. 
+                # more info here: https://www.regular-expressions.info/quickstart.html
+                # but for here just know that it means basically, remove punctuation (hence "punct")
+
+# So this code gets the colon's out of Sys.time()
+gsub('[[:punct:]]', '_', Sys.time())
+       
+# putting more of it together, this give me
+paste0(getwd(),
+       '/graphs/p_tree_canopy_',
+       gsub('[[:punct:]]',
+            '_',
+            Sys.time()),
+       '.png')
+# give me 
+# "/Users/dlocke/msb/LandCoverPaper/landcover_analyses/graphs/p_tree_canopy_2019_11_12 15_54_50.png"
+# and should give you "C:/Users/HDutta/Documents/Hillol_LCAnalyses/landcover_analyses/graphs/p_tree_canopy_2019_11_12 15_54_50.png"
+# but with a different day and time..
+
+# hopefully that just made a new "graphs" folder on your computer.
+
+# plot model diagnostics to check model assumptions
+# FIXME (DHL): use Beta GLMMs in glmmTMB
+# https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#beta-glmms
+# TODO (DHL) save out the diagnostic plots
+plot_model(p_tree_mod, type = 'diag') # this looks really bad. 
 
 
-ggplot2::#ggsave(file="Figure 2 Entire Yard Combined.png",
-  width=90, height=150, units = "mm")
-
-
-#Plot saved as image (png) file
-ggplot2::ggsave(file="Continuous Tree model.png",
-                width=120, height=150, units = "mm")
-
-#Plot model with random effects
-plot_model(p_tree_mod, type = 're', title = "Random effects of Tree model")
-ggplot2::ggsave(file="Random Effects of Tree model.png",
-                width=120, height=150, units = "mm")
-
-#Plot model to check model assumptions
-plot_model(p_grass_mod, type = 'diag')
-
-# TODO HD: copy "p_tree_mod" but for the other dependent variables like
-# "Perc_Grass"
-
-# TODO HD: add other models to this tabular display
+# TODO DHL: add other models to this tabular display
 tab_model(p_tree_mod,
           ci.hyphen = ' to ',
           show.ngroups = TRUE,
-          dv.labels= '% Tree Canopy Cover',
-          pred.labels = c('(Intercept)',
-                          'Median Household Income',
-                          '% non-White population',
-                          '% Hispanic population',
-                          '% Owner Occupied Housing',
-                          'Housing Age',
-                          'Terrain Roughness'))
+          dv.labels= '% Tree Canopy Cover') # because of your great idea of renaming the variables when scaling, we dont need this
+                                            # anymore. NICE WORK!
+          # pred.labels = c('(Intercept)',
+          #                 'Median Household Income',
+          #                 '% non-White population',
+          #               '% Hispanic population',
+          #                 '% Owner Occupied Housing',
+          #                 'Housing Age',
+          #                 'Terrain Roughness'))
 
+# lets write out the table
+tab_model(p_tree_mod,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels = '% Tree Canopy Cover',
+          file = paste0(getwd(), '/tables/p_tree_canopy_',               # see how this is now "tables"
+                        gsub('[[:punct:]]', '_', Sys.time()), '.html'))  # ".png" changed to ".html",
+                                                                         # should open nicely in web browser
 
-#Grass Model (Hillol):
+# Grass Model
+# we had a lot of things we programmed last time, and I am REALLY lazy!
+font_sz <- 10 # font size
+fig_w   <- 6.5
+fig_h   <- 2.5
+fig_u   <- 'in'
 
-p_grass_mod <- lmer(Perc_Grass ~ Median_Household_Income+
-                     Perc_nonWhite +
-                     Perc_Hispanic + 
-                     Perc_Own_House +
-                     Housing_Age + 
-                     Terrain_Roughness +
+# FIXME (DHL) to use better response distribution
+p_grass_mod <- lmer(Perc_Grass ~Median_Household_Income + # fixed effects
+                      Percent_nonWhite +
+                      Percent_Hispanic + 
+                      Percent_Own_House +
+                      Housing_Age + 
+                      Terrain_Roughness +
                      (1 | MSA),                               
                    data = df) 
 
-#Plot model with forest-plot of estimates
-plot_model(p_grass_mod, title = "Continuous Grass model" )
+# this is a little dangerous
+# we are writting over the 'p_fe' object we made for trees..
+p_fe <- plot_model(p_grass_mod,                                      # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                    # more explcit that accepting the defaults
+                   title = 'Grass Cover (%):\nfixed effects', # "\n" means "new line"
+                   sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw(font_sz)      # see using the new local variable
 
-#Plot saved as image (png) file
-ggplot2::ggsave(file="Continuous Grass model.png",
-                width=120, height=150, units = "mm")
+# peak at the graph
+p_fe
 
-#Plot model with random effects
-plot_model(p_grass_mod, type = 're', title = "Random effects of Grass model")
-ggplot2::ggsave(file="Random Effects of Grass model.png",
-                width=120, height=150, units = "mm")
+# random effects: p_tree_mod
+# we are writting over the 'p_fe' object we made for trees..
+p_re <- plot_model(p_grass_mod,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   title = 'Grass Cover (%):\nrandom effects',# "\n" means "new line"
+                   #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw(font_sz)      # see using the new local variable, NOW ALL GRAPHS WILL BE CONSITENT
 
+# peak at the graph
+p_re
+
+# combine the two graphs into one two-pane graph
+p_grass_graph <- plot_grid(p_fe, # fixed effects, p_grass_mod,
+                          p_re, # random effects, p_grass_mod,
+                          labels = c('A', 'B'))
+# looks great!
+p_grass_graph
+
+# save this out
+ggplot2::ggsave(plot = p_grass_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/p_grass_canopy_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # see, *very* lazy
+                height = fig_h, 
+                units = fig_u)
+
+
+# TODO (DHL) save out the diagnostic plots
 #Plot model to check model assumptions
 plot_model(p_grass_mod, type = 'diag')
 
-#table
-tab_model(p_grass_mod,
-          ci.hyphen = ' to ',
-          show.ngroups = TRUE,
-          dv.labels= '% Grass Cover',
-          pred.labels = c('(Intercept)',
-                          'Median Household Income',
-                          '% non-White population',
-                          '% Hispanic population',
-                          '% Owner Occupied Housing',
-                          'Housing Age',
-                          'Terrain Roughness'))
 
-#Other Landcover Model (Hillol):
+# Other Landcover Model (Hillol):
+# Other
 
-p_other_mod <- lmer(Perc_Other ~ Median_Household_Income+
-                      Perc_nonWhite +
-                      Perc_Hispanic + 
-                      Perc_Own_House +
+# FIXME (DHL) to use better response distribution
+p_other_mod <- lmer(Perc_Other ~Median_Household_Income + # fixed effects
+                      Percent_nonWhite +
+                      Percent_Hispanic + 
+                      Percent_Own_House +
                       Housing_Age + 
                       Terrain_Roughness +
                       (1 | MSA),                               
                     data = df) 
 
-#Plot model with forest-plot of estimates
-plot_model(p_other_mod, title = "Continuous Other Lancover model" )
+# this is a little dangerous
+# we are writting over the 'p_fe' object we made for grass..
+p_fe <- plot_model(p_other_mod,                                      # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                    # more explcit that accepting the defaults
+                   title = 'Other Cover (%):\nfixed effects', # "\n" means "new line"
+                   sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw(font_sz)      # see using the new local variable
 
-#Plot saved as image (png) file
-ggplot2::ggsave(file="Continuous Other Landcover model.png",
-                width=120, height=150, units = "mm")
+# peak at the graph
+p_fe
 
-#Plot model with random effects
-plot_model(p_other_mod, type = 're', title = "Random effects of Othe Landcover model")
-ggplot2::ggsave(file="Random Effects of Other Landcover model.png",
-                width=120, height=150, units = "mm")
+# random effects: p_other_mod
+# we are writting over the 'p_fe' object we made for grass.
+p_re <- plot_model(p_other_mod,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   title = 'Other Cover (%):\nrandom effects',# "\n" means "new line"
+                   #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw(font_sz)      # see using the new local variable, NOW ALL GRAPHS WILL BE CONSITENT
 
+# peak at the graph
+p_re
+
+# combine the two graphs into one two-pane graph
+p_other_graph <- plot_grid(p_fe, # fixed effects
+                           p_re, # random effects
+                           labels = c('A', 'B'))
+# looks great!
+p_other_graph
+
+# save this out
+ggplot2::ggsave(plot = p_other_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/p_other_canopy_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # see, *very* lazy
+                height = fig_h, 
+                units = fig_u)
+
+# TODO (DHL) save out the diagnostic plots
 #Plot model to check model assumptions
 plot_model(p_other_mod, type = 'diag')
 
-#table
-tab_model(p_other_mod,
-          ci.hyphen = ' to ',
-          show.ngroups = TRUE,
-          dv.labels= '% Other Landcover',
-          pred.labels = c('(Intercept)',
-                          'Median Household Income',
-                          '% non-White population',
-                          '% Hispanic population',
-                          '% Owner Occupied Housing',
-                          'Housing Age',
-                          'Terrain Roughness'))
 
-#Water Model (Hillol):
 
-p_other_mod <- lmer(Perc_Water ~ Median_Household_Income+
-                      Perc_nonWhite +
-                      Perc_Hispanic + 
-                      Perc_Own_House +
+# Water Model (Hillol):
+# I think you see the patern here, so cutting out some of the intermediate steps
+
+# FIXME (DHL) to use better response distribution
+p_water_mod <- lmer(Perc_Water ~Median_Household_Income + # fixed effects
+                      Percent_nonWhite +
+                      Percent_Hispanic + 
+                      Percent_Own_House +
                       Housing_Age + 
                       Terrain_Roughness +
                       (1 | MSA),                               
                     data = df) 
+# save fe plot
+p_fe <- plot_model(p_water_mod,                                      # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                    # more explcit that accepting the defaults
+                   title = 'Water Cover (%):\nfixed effects', # "\n" means "new line"
+                   sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw(font_sz)      # see using the new local variable
 
-#Plot model with forest-plot of estimates
-plot_model(p_other_mod, title = "Continuous Water model" )
+# save re plot
+p_re <- plot_model(p_water_mod,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   title = 'Water Cover (%):\nrandom effects',# "\n" means "new line"
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw(font_sz)      # see using the new local variable, NOW ALL GRAPHS WILL BE CONSITENT
 
-#Plot saved as image (png) file
-ggplot2::ggsave(file="Continuous Water model.png",
-                width=120, height=150, units = "mm")
+# combine the two graphs into one two-pane graph
+p_water_graph <- plot_grid(p_fe, # fixed effects
+                           p_re, # random effects
+                           labels = c('A', 'B'))
+# save this out
+ggplot2::ggsave(plot = p_water_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/p_water_canopy_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # see, *very* lazy
+                height = fig_h, 
+                units = fig_u)
 
-#Plot model with random effects
-plot_model(p_other_mod, type = 're', title = "Random effects of Water model")
-ggplot2::ggsave(file="Random Effects of Water model.png",
-                width=120, height=150, units = "mm")
 
+# TODO (DHL) save out the diagnostic plots
 #Plot model to check model assumptions
-plot_model(p_other_mod, type = 'diag')
+plot_model(p_water_mod, type = 'diag')
 
-#table
-tab_model(p_other_mod,
+# Percent cover tables
+# lets write out the table
+tab_model(p_tree_mod,     # four models
+          p_grass_mod,
+          p_other_mod,
+          p_water_mod,
           ci.hyphen = ' to ',
           show.ngroups = TRUE,
-          dv.labels= '% Water areas',
-          pred.labels = c('(Intercept)',
-                          'Median Household Income',
-                          '% non-White population',
-                          '% Hispanic population',
-                          '% Owner Occupied Housing',
-                          'Housing Age',
-                          'Terrain Roughness'))
+          dv.labels = c('% Tree Canopy Cover', # for model lables
+                        '% Grass Cover',
+                        '% Other Cover',
+                        '% Water Cover'),
+          file = paste0(getwd(), '/tables/perc_cover_vars_',              
+                        gsub('[[:punct:]]', '_', Sys.time()), '.html')) # comment out the "file" argument to view in RStudio
+                                                                        # should open nicely in web browser when saved out.
+
+
+# FIXME ALL MODELS ARE PROVISIONAL, the distrubtion is wrong. DHL TO FIX
+
+# TODO: HD - see the "tab_model" above and try to do something like that for the 
+# next set of 6 or 8 DVs. I can help. 
 
 #Mean patch area Tree Model (Hillol):
-
+# FIXME (DHL) to use better response distribution ??
 MPT_mod <- lmer(MPA_T ~ Median_Household_Income+
-                      Perc_nonWhite +
-                      Perc_Hispanic + 
-                      Perc_Own_House +
+                      Percent_nonWhite +
+                      Percent_Hispanic + 
+                      Percent_Own_House +
                       Housing_Age + 
                       Terrain_Roughness +
                       (1 | MSA),                               
                     data = df) 
 
-#Plot model with forest-plot of estimates
-plot_model(MPT_mod, title = "Mean Patch Area Tree model" )
+p_fe <- plot_model(MPT_mod,                                      # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                    # more explcit that accepting the defaults
+                   title = 'Mean Patch Area (Trees):\nfixed effects', # "\n" means "new line"
+                   sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw(font_sz)      # see using the new local variable
 
-#Plot saved as image (png) file
-ggplot2::ggsave(file="Mean Patch Area Tree model.png",
-                width=120, height=150, units = "mm")
+# save re plot
+p_re <- plot_model(MPT_mod,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   title = 'Mean Patch Area (Trees):\nrandom effects',# "\n" means "new line"
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw(font_sz)      # see using the new local variable, NOW ALL GRAPHS WILL BE CONSITENT
 
-#Plot model with random effects
-plot_model(MPT_mod, type = 're', title = "Random effects of Mean Patch Area Tree model")
-ggplot2::ggsave(file="Random Effects of Mean Patch Area Tree model.png",
-                width=120, height=150, units = "mm")
+# combine the two graphs into one two-pane graph
+MPT_graph <- plot_grid(p_fe, # fixed effects
+                           p_re, # random effects
+                           labels = c('A', 'B'))
+# save this out
+ggplot2::ggsave(plot = MPT_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/MPT_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # see, *very* lazy
+                height = fig_h, 
+                units = fig_u)
 
+
+# TODO (DHL) save out the diagnostic plots
 #Plot model to check model assumptions
 plot_model(MPT_mod, type = 'diag')
 
-#table
-tab_model(MPT_mod,
-          ci.hyphen = ' to ',
-          show.ngroups = TRUE,
-          dv.labels= 'Mean Patch areas-Tree',
-          pred.labels = c('(Intercept)',
-                          'Median Household Income',
-                          '% non-White population',
-                          '% Hispanic population',
-                          '% Owner Occupied Housing',
-                          'Housing Age',
-                          'Terrain Roughness'))
 
-#Mean patch area Grass Model (Hillol):
 
+# Mean patch area Grass Model (Hillol):
+# FIXME (DHL) to use better response distribution ??
 MPG_mod <- lmer(MPA_G ~ Median_Household_Income+
-                  Perc_nonWhite +
-                  Perc_Hispanic + 
-                  Perc_Own_House +
+                  Percent_nonWhite +
+                  Percent_Hispanic + 
+                  Percent_Own_House +
                   Housing_Age + 
                   Terrain_Roughness +
                   (1 | MSA),                               
                 data = df) 
 
-#Plot model with forest-plot of estimates
-plot_model(MPG_mod, title = "Mean Patch Area Grass model" )
+p_fe <- plot_model(MPG_mod,                                      # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                    # more explcit that accepting the defaults
+                   title = 'Mean Patch Area (Grass):\nfixed effects', # "\n" means "new line"
+                   sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw(font_sz)      # see using the new local variable
 
-#Plot saved as image (png) file
-ggplot2::ggsave(file="Mean Patch Area Grass model.png",
-                width=120, height=150, units = "mm")
+# save re plot
+p_re <- plot_model(MPG_mod,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   title = 'Mean Patch Area (Grass):\nrandom effects',# "\n" means "new line"
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw(font_sz)      # see using the new local variable, NOW ALL GRAPHS WILL BE CONSITENT
 
-#Plot model with random effects
-plot_model(MPG_mod, type = 're', title = "Random effects of Mean Patch Area Grass model")
-ggplot2::ggsave(file="Random Effects of Mean Patch Area Grass model.png",
-                width=120, height=150, units = "mm")
+# combine the two graphs into one two-pane graph
+MPG_graph <- plot_grid(p_fe, # fixed effects
+                       p_re, # random effects
+                       labels = c('A', 'B'))
+# save this out
+ggplot2::ggsave(plot = MPG_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/MPG_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # see, *very* lazy
+                height = fig_h, 
+                units = fig_u)
 
+
+# TODO (DHL) save out the diagnostic plots
 #Plot model to check model assumptions
 plot_model(MPG_mod, type = 'diag')
 
-#table
-tab_model(MPG_mod,
-          ci.hyphen = ' to ',
-          show.ngroups = TRUE,
-          dv.labels= 'Mean Patch areas-Grass',
-          pred.labels = c('(Intercept)',
-                          'Median Household Income',
-                          '% non-White population',
-                          '% Hispanic population',
-                          '% Owner Occupied Housing',
-                          'Housing Age',
-                          'Terrain Roughness'))
 
-#Number of patch area Tree Model (Hillol):
 
+
+
+# FIXME (DHL) to use better response distribution ??
+# Number of patch area Tree Model (Hillol):
 NPT_mod <- lmer(NP_T ~ Median_Household_Income+
-                  Perc_nonWhite +
-                  Perc_Hispanic + 
-                  Perc_Own_House +
+                  Percent_nonWhite +
+                  Percent_Hispanic + 
+                  Percent_Own_House +
                   Housing_Age + 
                   Terrain_Roughness +
                   (1 | MSA),                               
                 data = df) 
 
-#Plot model with forest-plot of estimates
-plot_model(NPT_mod, title = "Mean Patch Area Tree model" )
+p_fe <- plot_model(NPT_mod,                                      # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                    # more explcit that accepting the defaults
+                   title = 'Number of Patches (Tree):\nfixed effects', # "\n" means "new line"
+                   sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw(font_sz)      # see using the new local variable
 
-#Plot saved as image (png) file
-ggplot2::ggsave(file="Mean Patch Area Tree model.png",
-                width=120, height=150, units = "mm")
+# save re plot
+p_re <- plot_model(NPT_mod,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   title = 'Number of Patches (Tree):\nrandom effects',# "\n" means "new line"
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw(font_sz)      # see using the new local variable, NOW ALL GRAPHS WILL BE CONSITENT
 
-#Plot model with random effects
-plot_model(NPT_mod, type = 're', title = "Random effects of Mean Patch Area Tree model")
-ggplot2::ggsave(file="Random Effects of Mean Patch Area Tree model.png",
-                width=120, height=150, units = "mm")
+# combine the two graphs into one two-pane graph
+NPT_graph <- plot_grid(p_fe, # fixed effects
+                       p_re, # random effects
+                       labels = c('A', 'B'))
+# save this out
+ggplot2::ggsave(plot = NPT_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/NPT_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # see, *very* lazy
+                height = fig_h, 
+                units = fig_u)
 
+# TODO (DHL) save out the diagnostic plots
 #Plot model to check model assumptions
 plot_model(NPT_mod, type = 'diag')
 
-#table
-tab_model(NPT_mod,
-          ci.hyphen = ' to ',
-          show.ngroups = TRUE,
-          dv.labels= 'Number of Patch areas-Tree',
-          pred.labels = c('(Intercept)',
-                          'Median Household Income',
-                          '% non-White population',
-                          '% Hispanic population',
-                          '% Owner Occupied Housing',
-                          'Housing Age',
-                          'Terrain Roughness'))
 
-#Number of Grass Patch Area Model (Hillol):
 
+
+
+# FIXME (DHL) to use better response distribution ??
+# Number of patches of Grass (Hillol):
 NPG_mod <- lmer(NP_G ~ Median_Household_Income+
-                  Perc_nonWhite +
-                  Perc_Hispanic + 
-                  Perc_Own_House +
+                  Percent_nonWhite +
+                  Percent_Hispanic + 
+                  Percent_Own_House +
                   Housing_Age + 
                   Terrain_Roughness +
                   (1 | MSA),                               
                 data = df) 
 
-#Plot model with forest-plot of estimates
-plot_model(NPG_mod, title = "Number of Grass Patch Area model" )
+p_fe <- plot_model(NPG_mod,                                      # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                    # more explcit that accepting the defaults
+                   title = 'Number of Patches (Grass):\nfixed effects', # "\n" means "new line"
+                   sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw(font_sz)      # see using the new local variable
 
-#Plot saved as image (png) file
-ggplot2::ggsave(file="Number of Grass Patch Area model.png",
-                width=120, height=150, units = "mm")
+# save re plot
+p_re <- plot_model(NPG_mod,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   title = 'Number of Patches (Grass):\nrandom effects',# "\n" means "new line"
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw(font_sz)      # see using the new local variable, NOW ALL GRAPHS WILL BE CONSITENT
 
-#Plot model with random effects
-plot_model(NPG_mod, type = 're', title = "Random effects of Number of Grass Patch Area model")
-ggplot2::ggsave(file="Random Effects of Number of Grass Patch Area model.png",
-                width=120, height=150, units = "mm")
+# combine the two graphs into one two-pane graph
+NPG_graph <- plot_grid(p_fe, # fixed effects
+                       p_re, # random effects
+                       labels = c('A', 'B'))
+# save this out
+ggplot2::ggsave(plot = NPG_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/NPG_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # see, *very* lazy
+                height = fig_h, 
+                units = fig_u)
 
+# TODO (DHL) save out the diagnostic plots
 #Plot model to check model assumptions
 plot_model(NPG_mod, type = 'diag')
 
-#table
-tab_model(NPG_mod,
-          ci.hyphen = ' to ',
-          show.ngroups = TRUE,
-          dv.labels= 'Number of Patch areas-Grass',
-          pred.labels = c('(Intercept)',
-                          'Median Household Income',
-                          '% non-White population',
-                          '% Hispanic population',
-                          '% Owner Occupied Housing',
-                          'Housing Age',
-                          'Terrain Roughness'))
+
+
+
+## Dexter ended here.
+# Tue Nov 12 17:41:10 2019 ------------------------------
+
+
+
+
+
 
 #Perimeter-Area ratio of Tree canopy Model (Hillol):
 
@@ -725,12 +904,6 @@ tab_model(CVG_mod,
                           '% Owner Occupied Housing',
                           'Housing Age',
                           'Terrain Roughness')) 
-#end
-
-
-
-
-
 #end
 
 
