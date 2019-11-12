@@ -17,13 +17,17 @@ library(sf)             # used for reading shapefiles
 library(sjPlot)         # nice graphs and tables supporting many models
 library(lme4)           # fits multi-level models
 library(ggpubr)         # mixes base stats functions with ggplot graphics, its great!
-   
+library(RColorBrewer)   # good for colors
+library(cowplot)        # for multi-paned graphs NOTE THAT THIS MASKS ggplot2::ggsave()!!
 
 # read in the data
 # you will have to change the file path to match the location of the data
 # on your computer
 #sf <- read_sf('/Users/dlocke/temp_MSB4RoyChowdhuryDobler/CBGs/CBG_ALL_v20161014.shp') 
-sf <- read_sf('D:/Macrobio/blockgroup_landcover/CBG_ALL_v20161014.shp')
+sf <- read_sf('D:/Macrobio/blockgroup_landcover/CBG_ALL_v20161014.shp') # this is working for us, 
+                                                                        # but the better/ more sophistocated why is to something 
+                                                                        # like this
+# https://community.rstudio.com/t/project-oriented-workflow-setwd-rm-list-ls-and-computer-fires/3549
 
 # These data were in that folder so I could share easily with Carlos
 # but I'm keeping the R project locally here now:
@@ -36,6 +40,9 @@ names(sf)
 # we don't actually need the polygons here, so lets pull the data frame out
 # that's like working with the attribute table in ArcGIS, but not the spatial data
 df <- dplyr::select(as.data.frame(sf), -geometry)
+
+# here is another way to do what is shown above, just an FYI
+# df <- st_drop_geometry(sf)
 
 head(df)
 names(df)
@@ -81,9 +88,8 @@ round(prop.table(table(df$MSA, useNA = 'ifany'))*100, 2)# rounding 2 places, muc
 help(table) # to see what the "useNA" argument is for
 
 
-# categorical analyses
-# good for colors
-library(RColorBrewer)
+#### categorical analyses
+####
 RColorBrewer::display.brewer.all() # great website http://colorbrewer2.org ! 
 
 # lets aim for consistent colors 
@@ -141,6 +147,8 @@ df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
                  legend = '') + 
   stat_compare_means() -> city_tree_plot# answers the question "are thes medians different from eachother"
 
+# YES, see the Kruska-Wallis test results now?
+
 # print the graphic, noticed we assigned with "->" at the end?
 city_tree_plot
 
@@ -151,61 +159,114 @@ city_comps <- list(c('PHX', 'MSP'),
                    c('PHX', 'BOS'),
                    c('PHX', 'BAL'))
 
-df %>% mutate(city_urban = paste(MSA, Urbanicity, sep = '_')) %>% # new city - urbanicity variable
-  ggboxplot(y = 'Perc_Tree', # continuous dependent variable
-            x = 'city_urban',       # categorical grouping variable
-            fill = 'MSA',    # what to color by
-            palette = 'Set1',# what colors to use
-            #ylim = c(0, 150),# the value of Y (% tree canopy) hypothetically can range from 0 to 100
-            ylab = 'Tree Canopy Cover (%)', # more attractive label
-            xlab = 'Metropolitan Statistical Area',
-            #add = 'jitter',  # Try turning this on and off with "#"
-            legend = '')
+# now doing multiple comparisions
+df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
+                 x = 'MSA',       # categorical grouping variable
+                 fill = 'MSA',    # what to color by
+                 palette = 'Set1',# what colors to use
+                 ylim = c(0, 150),# ADDED space for new lables
+                 ylab = 'Tree Canopy Cover (%)', # more attractive label
+                 xlab = 'Metropolitan Statistical Area',
+                 #add = 'jitter',  # Try turning this on and off with "#"
+                 legend = '') + 
+  stat_compare_means() + 
+  stat_compare_means(comparisons = city_comps)-> city_tree_plot
 
-# unfinished
-df %>% mutate(city_urban = paste(MSA, Urbanicity, sep = '_')) %>% # new city - urbanicity variable
-  ggboxplot(y = 'Perc_Tree', # continuous dependent variable
-            x = 'city_urban',       # categorical grouping variable
-            fill = 'MSA',    # what to color by
-            facet.by = 'MSA',
-            palette = 'Set1',# what colors to use
-            #ylim = c(0, 150),# the value of Y (% tree canopy) hypothetically can range from 0 to 100
-            ylab = 'Tree Canopy Cover (%)', # more attractive label
-            xlab = 'Metropolitan Statistical Area',
-            #add = 'jitter',  # Try turning this on and off with "#"
-            legend = '')
+# chceck it out!
+city_tree_plot
+
+# we'll return to this later
+# df %>% mutate(city_urban = paste(MSA, Urbanicity, sep = '_')) %>% # new city - urbanicity variable
+#   ggboxplot(y = 'Perc_Tree', # continuous dependent variable
+#             x = 'city_urban',       # categorical grouping variable
+#             fill = 'MSA',    # what to color by
+#             palette = 'Set1',# what colors to use
+#             #ylim = c(0, 150),# the value of Y (% tree canopy) hypothetically can range from 0 to 100
+#             ylab = 'Tree Canopy Cover (%)', # more attractive label
+#             xlab = 'Metropolitan Statistical Area',
+#             #add = 'jitter',  # Try turning this on and off with "#"
+#             legend = '')
+# 
+# 
+# df %>% mutate(city_urban = paste(MSA, Urbanicity, sep = '_')) %>% # new city - urbanicity variable
+#   ggboxplot(y = 'Perc_Tree', # continuous dependent variable
+#             x = 'city_urban',       # categorical grouping variable
+#             fill = 'MSA',    # what to color by
+#             facet.by = 'MSA',
+#             palette = 'Set1',# what colors to use
+#             #ylim = c(0, 150),# the value of Y (% tree canopy) hypothetically can range from 0 to 100
+#             ylab = 'Tree Canopy Cover (%)', # more attractive label
+#             xlab = 'Metropolitan Statistical Area',
+#             #add = 'jitter',  # Try turning this on and off with "#"
+#             legend = '')
 
 
-
-# continuous analyses but first lets scale the predictors, grand-mean scaling
+###
+### continuous analyses but first lets scale the predictors, grand-mean scaling
+### See this paper which addresses scalling
+### guinis H, Gottfredson RK, Culpepper SA (2013) Best-Practice Recommendations for Estimating Cross-Level Interaction Effects Using Multilevel Modeling. J Manage 39(6):1490–1528.
 df$Median_Household_Income <- scale(df$INC_MED_HS, center = T)
-df$Perc_nonWhite           <- scale(I(100 - df$P_White), center = T)
-df$Perc_Hispanic           <- scale(df$P_Hisp, center = T)
-df$Perc_Own_House          <- scale(df$P_Own, center = T)
+#df$`Percent_non-White`           <- scale(I(100 - df$P_White), center = T) # so this didn't really work out. :-/
+df$Percent_nonWhite           <- scale(I(100 - df$P_White), center = T) # so this didn't really work out. :-/
+df$Percent_Hispanic           <- scale(df$P_Hisp, center = T)
+df$Percent_Own_House          <- scale(df$P_Own, center = T)
 df$Housing_Age             <- scale(df$HOUS_AGE, center = T)
-df$Terrain_Roughness       <- scale(df$SDE_STD, center = T)
+df$Terrain_Roughness       <- scale(df$SDE_STD, center = T) # WOW, the changed names print great in plot_model, I didn't know
+                                                            # that plot_mod() changes "_" to " "
 
+# first dependent variable: Perc_Tree
 p_tree_mod <- lmer(Perc_Tree ~ Median_Household_Income + # fixed effects
-                     Perc_nonWhite +
-                     Perc_Hispanic + 
-                     Perc_Own_House +
+                     Percent_nonWhite +
+                     Percent_Hispanic + 
+                     Percent_Own_House +
                      Housing_Age + 
                      Terrain_Roughness +
                     (1 | MSA),                               # random effects
                    data = df)
 
-plot_model(p_tree_mod)                      # coefficients, defaults to "est"
-plot_model(p_tree_mod) + theme_bw()         # better display?
-plot_model(p_tree_mod) + theme_bw(20)       # BIGGER lables, see 
+# # these wre just examples to show how to display the different output types, so I'm turning them "off' with #
+# plot_model(p_tree_mod)                      # coefficients, defaults to "est"
+# plot_model(p_tree_mod) + theme_bw()         # better display?
+# plot_model(p_tree_mod) + theme_bw(20)       # BIGGER lables, see 
+# 
+# plot_model(p_tree_mod, type = 're')         # random effects
+# plot_model(p_tree_mod, type = 'std')        # standardized effects, in units of standard deviations
+# plot_model(p_tree_mod, type = 'pred')       # standardized effects, in units of standard deviations
+# 
+# plot_model(p_tree_mod, type = 'diag')       # standardized effects, in units of standard deviations
 
-plot_model(p_tree_mod, type = 're')         # random effects
-plot_model(p_tree_mod, type = 'std')        # standardized effects, in units of standard deviations
-plot_model(p_tree_mod, type = 'pred')       # standardized effects, in units of standard deviations
+# Plot model with forest-plot of estimates
+# plot_model(p_tree_mod, title = "Continuous Tree model" ) # not really an helpful title
+p_fe <- plot_model(p_tree_mod,                                      # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                    # more explcit that accepting the defaults
+                   title = 'Tree Canopy Cover (%)\nfixed effects',  # "\n" means "new line"
+                   sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw(18)                                                      # number here referes to font size
 
-plot_model(p_tree_mod, type = 'diag')       # standardized effects, in units of standard deviations
+# peak at the graph
+p_fe
 
-#Plot model with forest-plot of estimates
-plot_model(p_grass_mod, title = "Continuous Tree model" )
+# random effects: p_tree_mod
+p_re <- plot_model(p_tree_mod,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   title = 'Tree Canopy Cover (%)\nrandom effects',  # "\n" means "new line"
+                   #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw(18)                                                      # number here referes to font size
+
+# peak at the graph
+p_re
+
+# combine the two graphs into one two-pane graph
+plot_grid(p_fe, # fixed effects, p_tree_mod,
+          p_re, # random effects, p_tree_mod,
+          labels = c('A', 'B'))
+
+
+ggplot2::#ggsave(file="Figure 2 Entire Yard Combined.png",
+  width=90, height=150, units = "mm")
+
 
 #Plot saved as image (png) file
 ggplot2::ggsave(file="Continuous Tree model.png",
