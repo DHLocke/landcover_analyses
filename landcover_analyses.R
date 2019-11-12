@@ -493,7 +493,85 @@ tab_model(PARG_mod,
                           '% Hispanic population',
                           '% Owner Occupied Housing',
                           'Housing Age',
-                          'Terrain Roughness'))                   'Terrain Roughness'))
+                          'Terrain Roughness'))                   
+
+#Coefficient of variation of Tree patch Model (Hillol):
+
+CVT_mod <- lmer(CV_T ~ Median_Household_Income+
+                   Perc_nonWhite +
+                   Perc_Hispanic + 
+                   Perc_Own_House +
+                   Housing_Age + 
+                   Terrain_Roughness +
+                   (1 | MSA),                               
+                 data = df) 
+
+#Plot model with forest-plot of estimates
+plot_model(CVT_mod, title = "Coefficient of variation of Tree patch model" )
+
+#Plot saved as image (png) file
+ggplot2::ggsave(file="Coefficient of variation of Tree patch model.png",
+                width=120, height=150, units = "mm")
+
+#Plot model with random effects
+plot_model(CVT_mod, type = 're', title = "Random effects of Coefficient of variation of Tree patch model")
+ggplot2::ggsave(file="Random Effects of Coefficient of variation of Tree patch model.png",
+                width=120, height=150, units = "mm")
+
+#Plot model to check model assumptions
+plot_model(CVT_mod, type = 'diag')
+
+#table
+tab_model(CVT_mod,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Coefficient of variation of Tree patch',
+          pred.labels = c('(Intercept)',
+                          'Median Household Income',
+                          '% non-White population',
+                          '% Hispanic population',
+                          '% Owner Occupied Housing',
+                          'Housing Age',
+                          'Terrain Roughness'))
+
+#Coefficient of variation of Grass patch  Model (Hillol):
+
+CVG_mod <- lmer(CV_G ~ Median_Household_Income+
+                   Perc_nonWhite +
+                   Perc_Hispanic + 
+                   Perc_Own_House +
+                   Housing_Age + 
+                   Terrain_Roughness +
+                   (1 | MSA),                               
+                 data = df) 
+
+#Plot model with forest-plot of estimates
+plot_model(CVG_mod, title = "Coefficient of variation of Grass patch model" )
+
+#Plot saved as image (png) file
+ggplot2::ggsave(file="Coefficient of variation of Grass patch model.png",
+                width=120, height=150, units = "mm")
+
+#Plot model with random effects
+plot_model(CVG_mod, type = 're', title = "Random effects of Coefficient of variation of Grass patch model")
+ggplot2::ggsave(file="Random Effects of Coefficient of variation of Grass patch model.png",
+                width=120, height=150, units = "mm")
+
+#Plot model to check model assumptions
+plot_model(CVG_mod, type = 'diag')
+
+#table
+tab_model(CVG_mod,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Coefficient of variation of Grass patch',
+          pred.labels = c('(Intercept)',
+                          'Median Household Income',
+                          '% non-White population',
+                          '% Hispanic population',
+                          '% Owner Occupied Housing',
+                          'Housing Age',
+                          'Terrain Roughness')) 
 #end
 
 
