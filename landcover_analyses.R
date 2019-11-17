@@ -92,92 +92,408 @@ round(prop.table(table(df$MSA, useNA = 'ifany'))*100, 2)# rounding 2 places, muc
 help(table) # to see what the "useNA" argument is for
 
 
-#### categorical analyses
-####
-RColorBrewer::display.brewer.all() # great website http://colorbrewer2.org ! 
 
-# lets aim for consistent colors 
-pal_city <- brewer.pal(name = 'Set1', n = 6)  # this could be our city palette
-pal_city                                      # prints the colors out in hex format
+# some descriptive statistics
+# counts per city
+# inspired by https://github.com/sfirke/janitor
+df %>% tabyl(MSA) %>% 
+  adorn_totals('row') %>% 
+  adorn_pct_formatting() %>% 
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_count_',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = FALSE)
 
-# fancy version of the same thing, but the number of classes comes from the data
-pal_city <- brewer.pal(name = 'Set1',
-                       n = length(unique(df$MSA)))  # this will be our city palette
-# this could be useful if the number of categories changes
-pal_city                                      # See, same colors!
+# urbanicity
+table(df$Urbanicity, df$PNE_CODE, useNA = 'ifany')
+table(df$Urbanicity) # 1 is urban, 2 is suburban, 3 is exurban
 
-# library(ggpubr) # should have been run in the last script, that gives the ggboxplot() function
-# helpful instructions here: https://rpkgs.datanovia.com/ggpubr/reference/ggboxplot.html
-# also helpful http://www.sthda.com/english/articles/24-ggpubr-publication-ready-plots/
-df %>% ggboxplot(y = 'Perc_Tree',
-                 x = 'MSA') # basic box plot
+df %>%
+  mutate(Urbanicity_fct = 
+           recode_factor(Urbanicity,
+                         `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban')) %>% # do we prefer 'rural'))
+  tabyl(Urbanicity_fct) %>% 
+  adorn_totals('row') %>% 
+  adorn_pct_formatting() %>% 
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/Ubanicity_count_',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = FALSE)
 
-# add colors
-df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
-                 x = 'MSA',       # categorical grouping variable
-                 fill = 'MSA')    # color by the category
+# city by urbanicity (sum by col)
+df %>%
+  mutate(Urbanicity_fct = 
+           recode_factor(Urbanicity,
+                         `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban')) %>% # do we prefer 'rural'))
+  tabyl(MSA, Urbanicity_fct) %>% 
+  adorn_totals('row') %>% 
+  adorn_percentages('col') %>%
+  adorn_pct_formatting() %>%
+  adorn_ns() %>% 
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Ubanicity_count_sum_by_col_',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = FALSE)
 
-# add OUR colors from pal_city by copy/paste from 
-df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
-                 x = 'MSA',       # categorical grouping variable
-                 fill = 'MSA',
-                 palette = c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33"))  
+# city by urbanicity (sum by row)
+df %>%
+  mutate(Urbanicity_fct = 
+           recode_factor(Urbanicity,
+                         `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban')) %>% # do we prefer 'rural'))
+  tabyl(MSA, Urbanicity_fct) %>% 
+  adorn_totals('col') %>% 
+  adorn_percentages('row') %>%
+  adorn_pct_formatting() %>%
+  adorn_ns() %>% 
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Ubanicity_count_sum_by_row_',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = FALSE)
 
-# add OUR colors from pal_city
-df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
-                 x = 'MSA',       # categorical grouping variable
-                 fill = 'MSA',
-                 palette = 'Set1')# ggpubr is really smart! makes the same graph
 
-df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
-                 x = 'MSA',       # categorical grouping variable
-                 fill = 'MSA',    # what to color by
-                 palette = 'Set1',# what colors to use
-                 ylim = c(0, 100),# the value of Y (% tree canopy) hypothetically can range from 0 to 100
-                 ylab = 'Tree Canopy Cover (%)', # more attractive label
-                 xlab = 'Metropolitan Statistical Area',
-                 #add = 'jitter',  # Try turning this on and off with "#"
-                 legend = '')
+# Affluence
+table(df$Affluence, df$PNE_CODE, useNA = 'ifany')
+table(df$Affluence) # 1 high, 2 is medium, 3 is low
 
-# add some stats
-df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
-                 x = 'MSA',       # categorical grouping variable
-                 fill = 'MSA',    # what to color by
-                 palette = 'Set1',# what colors to use
-                 ylim = c(0, 100),# the value of Y (% tree canopy) hypothetically can range from 0 to 100
-                 ylab = 'Tree Canopy Cover (%)', # more attractive label
-                 xlab = 'Metropolitan Statistical Area',
-                 #add = 'jitter',  # Try turning this on and off with "#"
-                 legend = '') + 
-  stat_compare_means() -> city_tree_plot# answers the question "are thes medians different from eachother"
+df %>%
+  mutate(Affluence_fct = 
+           recode_factor(Affluence,
+                         `1` = 'High', `2` = 'Middle', `3` = 'Low')) %>%
+  tabyl(Affluence_fct) %>% 
+  adorn_totals('row') %>% 
+  adorn_pct_formatting() %>% 
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/Affluence_count_',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = FALSE)
 
-# YES, see the Kruska-Wallis test results now?
+# city by Affluence (sum by col)
+df %>%
+  mutate(Affluence_fct = 
+           recode_factor(Affluence,
+                         `1` = 'High', `2` = 'Middle', `3` = 'Low')) %>%
+  tabyl(MSA, Affluence_fct) %>% 
+  adorn_totals('row') %>% 
+  adorn_percentages('col') %>%
+  adorn_pct_formatting() %>%
+  adorn_ns() %>% 
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Affluence_count_sum_by_col_',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = FALSE)
 
-# print the graphic, noticed we assigned with "->" at the end?
-city_tree_plot
+# city by urbanicty (sum by row)
+df %>%
+  mutate(Affluence_fct = 
+           recode_factor(Affluence,
+                         `1` = 'High', `2` = 'Middle', `3` = 'Low')) %>%
+  tabyl(MSA, Affluence_fct) %>% 
+  adorn_totals('col') %>% 
+  adorn_percentages('row') %>%
+  adorn_pct_formatting() %>%
+  adorn_ns() %>% 
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Affluence_count_sum_by_row',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = FALSE)
 
-# but we want to know which pairs are different
-city_comps <- list(c('PHX', 'MSP'),
-                   c('PHX', 'MIA'),
-                   c('PHX', 'LAX'),
-                   c('PHX', 'BOS'),
-                   c('PHX', 'BAL'))
 
-# now doing multiple comparisions
-df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
-                 x = 'MSA',       # categorical grouping variable
-                 fill = 'MSA',    # what to color by
-                 palette = 'Set1',# what colors to use
-                 ylim = c(0, 150),# ADDED space for new lables
-                 ylab = 'Tree Canopy Cover (%)', # more attractive label
-                 xlab = 'Metropolitan Statistical Area',
-                 #add = 'jitter',  # Try turning this on and off with "#"
-                 legend = '') + 
-  stat_compare_means() + 
-  stat_compare_means(comparisons = city_comps)-> city_tree_plot
+# MSA Urbanicity Affluence
+df %>%
+  mutate(Urbanicity_fct = 
+           recode_factor(Urbanicity,
+                         `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban'),
+         Affluence_fct = 
+           recode_factor(Affluence,
+                         `1` = 'High', `2` = 'Middle', `3` = 'Low')) %>%
+  tabyl(MSA, Urbanicity_fct, Affluence_fct) %>% 
+  adorn_totals('col') %>% 
+  adorn_percentages('row') %>%
+  adorn_pct_formatting() %>%
+  adorn_ns() %>% 
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Urbanicity_Affluence_count_sum_by_row',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = FALSE)
 
-# chceck it out!
-city_tree_plot
+library(psych)
+df %>% select(Perc_Tree, Perc_Grass, Perc_Other, Perc_Water,
+              NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G) %>% 
+  describe(fast = TRUE) %>% 
+  mutate(variable = row.names(.),
+         `variable description` = c('tree canopy cover (%)',
+                                    'grass cover (%)',
+                                    'other area (%)',
+                                    'water area (%)',
+                                    'Number of Patches Tree (distinct tree patches, group of pixels)',
+                                    'Mean Patch Area Tree (the average size of tree patches)',
+                                    'TODO find out Coefficient of Variation for tree patches',
+                                    'Parimieter Area ratio for tree canopy',
+                                    'Number of Patches Grass',
+                                    'Mean Patch Area Grass',
+                                    'TODO find out Coefficient of Variation for tree patches',
+                                    'Parimieter Area ratio for tree canopy')) %>% 
+  #select(variable, min, max, mean, sd, se, range, 'variable description') %>% 
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = FALSE)
+
+# possibly an improved approach
+# https://rpkgs.datanovia.com/ggpubr/reference/desc_statby.html
+# group by MSA
+df %>% select(Perc_Tree, Perc_Grass, Perc_Other, Perc_Water,
+              NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
+              MSA) %>% 
+  group_by(MSA) %>% 
+  summarise_all(list(min = min, max = max, mean = mean, sd = sd)) %>%
+  ungroup() %>%  
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_wide_',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = FALSE)
+
+# group by MSA TALL
+df %>% select(Perc_Tree, Perc_Grass, Perc_Other, Perc_Water,
+              NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
+              MSA) %>% 
+  group_by(MSA) %>% 
+  summarise_all(list(min = min, max = max, mean = mean, sd = sd)) %>%
+  ungroup() %>%
+  t() %>% 
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_tall_',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = TRUE)
+
+
+
+# boxplot mania!
+library(ggpubr)
+
+# fast an gives with-in city comparisons, but does not provide across-city comparisons
+df %>%
+  mutate(Urbanicity_fct = 
+           recode_factor(Urbanicity,
+                         `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban',
+                         .ordered = TRUE),
+         Affluence_fct = 
+           recode_factor(Affluence,
+                         `1` = 'High', `2` = 'Middle', `3` = 'Low',
+                         .ordered = TRUE)) %>%
+  ggboxplot('Urbanicity_fct', 'Perc_Tree',
+            facet.by = 'MSA',
+            ylim = c(0, 125),
+            fill = 'Urbanicity_fct',
+            palette = 'Set2',
+            ylab = 'Tree Canopy Cover (%)', # more attractive label
+            xlab = 'Metropolitan Statistical Area',
+            legend = '') +
+  stat_compare_means(comparisons = list(c('Urban', 'Suburban'),
+                                        c('Suburban', 'Exurban'),
+                                        c('Urban', 'Exurban')),
+                     label = 'p.signif') 
+
+
+df %>%
+  mutate(Urbanicity_fct = 
+           recode_factor(Urbanicity,
+                         `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban',
+                         .ordered = TRUE),
+         Affluence_fct = 
+           recode_factor(Affluence,
+                         `1` = 'High', `2` = 'Medium', `3` = 'Low',
+                         .ordered = TRUE)) %>%
+  ggboxplot('Affluence_fct', 'Perc_Tree',
+            facet.by = 'MSA',
+            ylim = c(0, 125),
+            fill = 'Affluence_fct',
+            palette = 'Set3',
+            ylab = 'Tree Canopy Cover (%)', # more attractive label
+            xlab = 'Metropolitan Statistical Area',
+            legend = '') +
+  stat_compare_means(comparisons = list(c('High', 'Medium'),
+                                        c('Medium', 'Low'),
+                                        c('High', 'Low')),
+                     label = 'p.signif')
+
+# WORK IN PROGRESS, ignore for now
+# df %>%
+#   mutate(Urbanicity_fct = 
+#            recode_factor(Urbanicity,
+#                          `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban',
+#                          .ordered = TRUE),
+#          Affluence_fct = 
+#            recode_factor(Affluence,
+#                          `1` = 'High', `2` = 'Medium', `3` = 'Low',
+#                          .ordered = TRUE),
+#          urb_aff = interaction(Urbanicity_fct, Affluence_fct, sep = ' - ')) %>%
+#   ggboxplot('urb_aff', 'Perc_Tree',
+#             facet.by = 'MSA',
+#             ylim = c(0, 125),
+#             fill = 'Affluence_fct',
+#             palette = 'Set3',
+#             ylab = 'Tree Canopy Cover (%)', # more attractive label
+#             xlab = 'Metropolitan Statistical Area',
+#             legend = '') +
+#   stat_compare_means(comparisons = list(c('High', 'Medium'),
+#                                         c('Medium', 'Low'),
+#                                         c('High', 'Low')),
+#                      label = 'p.signif')
+
+
+df %<>% # create new blocking variable with combinations of MSA, Urbanicity and Affluence
+  mutate(Urbanicity_fct = 
+           recode_factor(Urbanicity,
+                         `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban',
+                         .ordered = TRUE),
+         Affluence_fct = 
+           recode_factor(Affluence,
+                         `1` = 'High', `2` = 'Medium', `3` = 'Low',
+                         .ordered = TRUE), 
+         MSA_Urb_Aff = paste(MSA, Urbanicity_fct, Affluence_fct, sep = '_'))
+
+# function to turn triangular p-val matrix into square matrix
+# from https://fabiomarroni.wordpress.com/2017/03/25/perform-pairwise-wilcoxon-test-classify-groups-by-significance-and-plot-results/
+tri.to.squ<-function(x)
+{
+  rn<-row.names(x)
+  cn<-colnames(x)
+  an<-unique(c(cn,rn))
+  myval<-x[!is.na(x)]
+  mymat<-matrix(1,nrow=length(an),ncol=length(an),dimnames=list(an,an))
+  for(ext in 1:length(cn))
+  {
+    for(int in 1:length(rn))
+    {
+      if(is.na(x[row.names(x)==rn[int],colnames(x)==cn[ext]])) next
+      mymat[row.names(mymat)==rn[int],colnames(mymat)==cn[ext]]<-x[row.names(x)==rn[int],colnames(x)==cn[ext]]
+      mymat[row.names(mymat)==cn[ext],colnames(mymat)==rn[int]]<-x[row.names(x)==rn[int],colnames(x)==cn[ext]]
+    }
+    
+  }
+  return(mymat)
+}
+
+
+
+# the significance test
+p_test <- pairwise.wilcox.test(df$Perc_Tree, df$MSA_Urb_Aff, p.adjust.method = 'holm', exact = FALSE) 
+
+# letters denoting significantly different differences
+my_letters <- multcompLetters(tri.to.squ(p_test$p.value),
+                              compare = '<=',
+                              threshold = 0.05,
+                              Letters = letters)
+# my_letters
+# data.frame(my_letters$Letters)$my_letters
+
+df %>% ggplot(aes(MSA_Urb_Aff, Perc_Tree)) +
+  geom_boxplot() +
+  ylim(0,200) + 
+  theme(axis.text.x = element_text(angle = 90)) + 
+  annotate('text',
+           x = 1:length(unique(df$MSA_Urb_Aff)),
+           y = 90,
+           label = data.frame(my_letters$Letters)$my_letters,
+           angle = 90,
+           hjust = 0)
+
+
+
+# mod <- lmer(Perc_Tree ~ Urbanicity_fct*Affluence_fct + (1 | MSA), data = df)
+mod <- lm(Perc_Tree ~ Urbanicity_fct*Affluence_fct*MSA, data = df)
+plot_model(mod)
+#plot_model(mod, type = 'int')
+plot_model(mod,
+           type = 'pred',
+           terms = c('Urbanicity_fct', 'Affluence_fct', 'MSA'), 
+           dodge = .45,
+           dot.size = 3) + theme_bw(14)
+# geom_hline(yintercept = 0 , col = 'light gray') +
+# geom_hline(yintercept = 25, col = 'light gray') +
+# geom_hline(yintercept = 50, col = 'light gray') +
+# geom_hline(yintercept = 75, col = 'light gray')
+
+
+tab_model(mod)
+
+# 
+# #### categorical analyses
+# ####
+# RColorBrewer::display.brewer.all() # great website http://colorbrewer2.org ! 
+# 
+# # lets aim for consistent colors 
+# pal_city <- brewer.pal(name = 'Set1', n = 6)  # this could be our city palette
+# pal_city                                      # prints the colors out in hex format
+# 
+# # fancy version of the same thing, but the number of classes comes from the data
+# pal_city <- brewer.pal(name = 'Set1',
+#                        n = length(unique(df$MSA)))  # this will be our city palette
+# # this could be useful if the number of categories changes
+# pal_city                                      # See, same colors!
+# 
+# # library(ggpubr) # should have been run in the last script, that gives the ggboxplot() function
+# # helpful instructions here: https://rpkgs.datanovia.com/ggpubr/reference/ggboxplot.html
+# # also helpful http://www.sthda.com/english/articles/24-ggpubr-publication-ready-plots/
+# df %>% ggboxplot(y = 'Perc_Tree',
+#                  x = 'MSA') # basic box plot
+# 
+# # add colors
+# df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
+#                  x = 'MSA',       # categorical grouping variable
+#                  fill = 'MSA')    # color by the category
+# 
+# # add OUR colors from pal_city by copy/paste from 
+# df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
+#                  x = 'MSA',       # categorical grouping variable
+#                  fill = 'MSA',
+#                  palette = c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33"))  
+# 
+# # add OUR colors from pal_city
+# df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
+#                  x = 'MSA',       # categorical grouping variable
+#                  fill = 'MSA',
+#                  palette = 'Set1')# ggpubr is really smart! makes the same graph
+# 
+# df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
+#                  x = 'MSA',       # categorical grouping variable
+#                  fill = 'MSA',    # what to color by
+#                  palette = 'Set1',# what colors to use
+#                  ylim = c(0, 100),# the value of Y (% tree canopy) hypothetically can range from 0 to 100
+#                  ylab = 'Tree Canopy Cover (%)', # more attractive label
+#                  xlab = 'Metropolitan Statistical Area',
+#                  #add = 'jitter',  # Try turning this on and off with "#"
+#                  legend = '')
+# 
+# # add some stats
+# df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
+#                  x = 'MSA',       # categorical grouping variable
+#                  fill = 'MSA',    # what to color by
+#                  palette = 'Set1',# what colors to use
+#                  ylim = c(0, 100),# the value of Y (% tree canopy) hypothetically can range from 0 to 100
+#                  ylab = 'Tree Canopy Cover (%)', # more attractive label
+#                  xlab = 'Metropolitan Statistical Area',
+#                  #add = 'jitter',  # Try turning this on and off with "#"
+#                  legend = '') + 
+#   stat_compare_means() -> city_tree_plot# answers the question "are thes medians different from eachother"
+# 
+# # YES, see the Kruska-Wallis test results now?
+# 
+# # print the graphic, noticed we assigned with "->" at the end?
+# city_tree_plot
+# 
+# # but we want to know which pairs are different
+# city_comps <- list(c('PHX', 'MSP'),
+#                    c('PHX', 'MIA'),
+#                    c('PHX', 'LAX'),
+#                    c('PHX', 'BOS'),
+#                    c('PHX', 'BAL'))
+# 
+# # now doing multiple comparisions
+# df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
+#                  x = 'MSA',       # categorical grouping variable
+#                  fill = 'MSA',    # what to color by
+#                  palette = 'Set1',# what colors to use
+#                  ylim = c(0, 150),# ADDED space for new lables
+#                  ylab = 'Tree Canopy Cover (%)', # more attractive label
+#                  xlab = 'Metropolitan Statistical Area',
+#                  #add = 'jitter',  # Try turning this on and off with "#"
+#                  legend = '') + 
+#   stat_compare_means() + 
+#   stat_compare_means(comparisons = city_comps)-> city_tree_plot
+# 
+# # chceck it out!
+# city_tree_plot
 
 # we'll return to this later
 # df %>% mutate(city_urban = paste(MSA, Urbanicity, sep = '_')) %>% # new city - urbanicity variable
@@ -791,15 +1107,6 @@ plot_model(NPG_mod, type = 'diag')
 
 
 
-
-## Dexter ended here.
-# Tue Nov 12 17:41:10 2019 ------------------------------
-
-
-
-
-
-
 #Perimeter-Area ratio of Tree canopy Model (Hillol):
 
 PART_mod <- lmer(PAratio_T ~ Median_Household_Income+
@@ -903,10 +1210,6 @@ tab_model(PARG_mod,
           file = paste0(getwd(), '/tables/Perimeter-Area Ratio (Grass)_',               # see how this is now "tables"
                         gsub('[[:punct:]]', '_', Sys.time()), '.html'))
 
-tab_model(PARG_mod,
-          ci.hyphen = ' to ',
-          show.ngroups = TRUE,
-          dv.labels = 'Perimeter-Area Ratio (Grass)')
 
 # TODO (DHL) save out the diagnostic plots
 #Plot model to check model assumptions
@@ -924,6 +1227,7 @@ CVT_mod <- lmer(CV_T ~ Median_Household_Income+
                    (1 | MSA),                               
                  data = df) 
 
+# TODO make sure title fits on graph
 p_CVT_fe <- plot_model(CVT_mod,                                      # save the model in "p_fe", short for Plot Fixed Effects
                         type = 'est',                                    # more explcit that accepting the defaults
                         title = 'Coefficient of variation of patch (Tree):\nfixed effects', # "\n" means "new line"
@@ -939,7 +1243,7 @@ p_CVT_re <- plot_model(CVT_mod,                                     # save the m
   theme_bw(font_sz)      # see using the new local variable, NOW ALL GRAPHS WILL BE CONSITENT
 
 # combine the two graphs into one two-pane graph
-CVT_graph <- plot_grid(p_CVT_fe, # fixed effects
+CVT_graph <- plot_grid(p_CVT_fe, # fixed effects 
                         p_CVT_re, # random effects
                         labels = c('A', 'B'))
 CVT_graph
@@ -961,6 +1265,7 @@ tab_model(CVT_mod,
           file = paste0(getwd(), '/tables/Coefficient of variation of patch (Tree)_',               # see how this is now "tables"
                         gsub('[[:punct:]]', '_', Sys.time()), '.html'))
 
+# TODO: HD Why use tab_model hereon the same model as is shown above? Why duplicate?
 tab_model(CVT_mod,
           ci.hyphen = ' to ',
           show.ngroups = TRUE,
@@ -1009,7 +1314,6 @@ ggplot2::ggsave(plot = CVG_graph,  # the graph we just made with plot_grid()
                 height = fig_h, 
                 units = fig_u)
 
-
 #tables
 tab_model(CVG_mod,
           ci.hyphen = ' to ',
@@ -1018,6 +1322,7 @@ tab_model(CVG_mod,
           file = paste0(getwd(), '/tables/Coefficient of variation of patch (Grass)_',               # see how this is now "tables"
                         gsub('[[:punct:]]', '_', Sys.time()), '.html'))
 
+# TODO HL: why dupliate this again?
 tab_model(CVG_mod,
           ci.hyphen = ' to ',
           show.ngroups = TRUE,
@@ -1029,6 +1334,8 @@ plot_model(CVG_mod, type = 'diag')
 
 #End for Saturday Night-Hillol.
 
+# OK, but what comes next? I don't understand this collection of code below.
+# TODO HD: please delete or add helpful comments.
 
 #Plot model with forest-plot of estimates
 plot_model(PART_mod, title = "Perimeter-Area ratio of Tree canopy model" )
