@@ -19,6 +19,8 @@ library(lme4)           # fits multi-level models
 library(ggpubr)         # mixes base stats functions with ggplot graphics, its great!
 library(RColorBrewer)   # good for colors
 library(cowplot)        # for multi-paned graphs NOTE THAT THIS MASKS ggplot2::ggsave()!!
+library(janitor)        # cleans things up
+library(mulcompView)    # supports significance letters for multiple comparisons, helpful formattings
 
 # at the end lets make sure to do
 citation('tidyverse') # but for each package. There is a package called grateful that is supposed to help with 
