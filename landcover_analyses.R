@@ -96,6 +96,7 @@ help(table) # to see what the "useNA" argument is for
 # some descriptive statistics
 # counts per city
 # inspired by https://github.com/sfirke/janitor
+library(janitor)
 df %>% tabyl(MSA) %>% 
   adorn_totals('row') %>% 
   adorn_pct_formatting() %>% 
@@ -103,6 +104,9 @@ df %>% tabyl(MSA) %>%
                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
             row.names = FALSE)
 
+
+  
+  
 # urbanicity
 table(df$Urbanicity, df$PNE_CODE, useNA = 'ifany')
 table(df$Urbanicity) # 1 is urban, 2 is suburban, 3 is exurban
@@ -114,7 +118,7 @@ df %>%
   tabyl(Urbanicity_fct) %>% 
   adorn_totals('row') %>% 
   adorn_pct_formatting() %>% 
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/Ubanicity_count_',
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/Urbanicity_count_',
                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
             row.names = FALSE)
 
@@ -128,7 +132,7 @@ df %>%
   adorn_percentages('col') %>%
   adorn_pct_formatting() %>%
   adorn_ns() %>% 
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Ubanicity_count_sum_by_col_',
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Urbanicity_count_sum_by_col_',
                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
             row.names = FALSE)
 
@@ -142,7 +146,7 @@ df %>%
   adorn_percentages('row') %>%
   adorn_pct_formatting() %>%
   adorn_ns() %>% 
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Ubanicity_count_sum_by_row_',
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Urbanicity_count_sum_by_row_',
                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
             row.names = FALSE)
 
@@ -341,6 +345,9 @@ df %<>% # create new blocking variable with combinations of MSA, Urbanicity and 
                          `1` = 'High', `2` = 'Medium', `3` = 'Low',
                          .ordered = TRUE), 
          MSA_Urb_Aff = paste(MSA, Urbanicity_fct, Affluence_fct, sep = '_'))
+
+
+
 
 # function to turn triangular p-val matrix into square matrix
 # from https://fabiomarroni.wordpress.com/2017/03/25/perform-pairwise-wilcoxon-test-classify-groups-by-significance-and-plot-results/
@@ -1230,7 +1237,7 @@ CVT_mod <- lmer(CV_T ~ Median_Household_Income+
 # TODO make sure title fits on graph
 p_CVT_fe <- plot_model(CVT_mod,                                      # save the model in "p_fe", short for Plot Fixed Effects
                         type = 'est',                                    # more explcit that accepting the defaults
-                        title = 'Coefficient of variation of patch (Tree):\nfixed effects', # "\n" means "new line"
+                        title = 'Coefficient of variation:\nof patch (Tree):\nfixed effects', # "\n" means "new line"
                         sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
                         vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
   theme_bw(font_sz)      # see using the new local variable
@@ -1238,7 +1245,7 @@ p_CVT_fe <- plot_model(CVT_mod,                                      # save the 
 # save re plot
 p_CVT_re <- plot_model(CVT_mod,                                     # save the model in "p_re", short for Plot RANDOM Effects
                         type = 're',                                    # more explcit that accepting the defaults
-                        title = 'Coefficient of variation of patch (Tree):\nrandom effects',# "\n" means "new line"
+                        title = 'Coefficient of variation:\n of patch (Tree):\nrandom effects',# "\n" means "new line"
                         vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
   theme_bw(font_sz)      # see using the new local variable, NOW ALL GRAPHS WILL BE CONSITENT
 
@@ -1288,7 +1295,7 @@ CVG_mod <- lmer(CV_G ~ Median_Household_Income+
 
 p_CVG_fe <- plot_model(CVG_mod,                                      # save the model in "p_fe", short for Plot Fixed Effects
                        type = 'est',                                    # more explcit that accepting the defaults
-                       title = 'Coefficient of variation of patch (Grass):\nfixed effects', # "\n" means "new line"
+                       title = 'Coefficient of variation:n\ of patch (Grass):\nfixed effects', # "\n" means "new line"
                        sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
                        vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
   theme_bw(font_sz)      # see using the new local variable
@@ -1296,7 +1303,7 @@ p_CVG_fe <- plot_model(CVG_mod,                                      # save the 
 # save re plot
 p_CVG_re <- plot_model(CVG_mod,                                     # save the model in "p_re", short for Plot RANDOM Effects
                        type = 're',                                    # more explcit that accepting the defaults
-                       title = 'Coefficient of variation of patch (Grass):\nrandom effects',# "\n" means "new line"
+                       title = 'Coefficient of variation:n\ of patch (Grass):\nrandom effects',# "\n" means "new line"
                        vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
   theme_bw(font_sz)      # see using the new local variable, NOW ALL GRAPHS WILL BE CONSITENT
 
@@ -1323,6 +1330,7 @@ tab_model(CVG_mod,
                         gsub('[[:punct:]]', '_', Sys.time()), '.html'))
 
 # TODO HL: why dupliate this again?
+#TO DHL: To show the table directly in the pane of R without opening the file from the local directory.
 tab_model(CVG_mod,
           ci.hyphen = ' to ',
           show.ngroups = TRUE,
@@ -1336,153 +1344,5 @@ plot_model(CVG_mod, type = 'diag')
 
 # OK, but what comes next? I don't understand this collection of code below.
 # TODO HD: please delete or add helpful comments.
-
-#Plot model with forest-plot of estimates
-plot_model(PART_mod, title = "Perimeter-Area ratio of Tree canopy model" )
-
-#Plot saved as image (png) file
-ggplot2::ggsave(file="Perimeter-Area ratio of Tree canopy model.png",
-                width=120, height=150, units = "mm")
-
-#Plot model with random effects
-plot_model(PART_mod, type = 're', title = "Random effects of Perimeter-Area ratio of Tree canopy model")
-ggplot2::ggsave(file="Random Effects of Perimeter-Area ratio of Tree canopy model.png",
-                width=120, height=150, units = "mm")
-
-#Plot model to check model assumptions
-plot_model(PART_mod, type = 'diag')
-
-#table
-tab_model(PART_mod,
-          ci.hyphen = ' to ',
-          show.ngroups = TRUE,
-          dv.labels= 'Perimeter-Area ratio of Tree canopy',
-          pred.labels = c('(Intercept)',
-                          'Median Household Income',
-                          '% non-White population',
-                          '% Hispanic population',
-                          '% Owner Occupied Housing',
-                          'Housing Age',
-                          'Terrain Roughness'))
-
-#Perimeter-Area ratio of Grass Model (Hillol):
-
-PARG_mod <- lmer(PAratio_G ~ Median_Household_Income+
-                   Perc_nonWhite +
-                   Perc_Hispanic + 
-                   Perc_Own_House +
-                   Housing_Age + 
-                   Terrain_Roughness +
-                   (1 | MSA),                               
-                 data = df) 
-
-#Plot model with forest-plot of estimates
-plot_model(PARG_mod, title = "Perimeter-Area ratio of Grass model" )
-
-#Plot saved as image (png) file
-ggplot2::ggsave(file="Perimeter-Area ratio of Grass model.png",
-                width=120, height=150, units = "mm")
-
-#Plot model with random effects
-plot_model(PARG_mod, type = 're', title = "Random effects of Perimeter-Area ratio of Grass model")
-ggplot2::ggsave(file="Random Effects of Perimeter-Area ratio of Grass model.png",
-                width=120, height=150, units = "mm")
-
-#Plot model to check model assumptions
-plot_model(PARG_mod, type = 'diag')
-
-#table
-tab_model(PARG_mod,
-          ci.hyphen = ' to ',
-          show.ngroups = TRUE,
-          dv.labels= 'Perimeter-Area ratio of Grass',
-          pred.labels = c('(Intercept)',
-                          'Median Household Income',
-                          '% non-White population',
-                          '% Hispanic population',
-                          '% Owner Occupied Housing',
-                          'Housing Age',
-                          'Terrain Roughness'))                   
-
-#Coefficient of variation of Tree patch Model (Hillol):
-
-CVT_mod <- lmer(CV_T ~ Median_Household_Income+
-                   Perc_nonWhite +
-                   Perc_Hispanic + 
-                   Perc_Own_House +
-                   Housing_Age + 
-                   Terrain_Roughness +
-                   (1 | MSA),                               
-                 data = df) 
-
-#Plot model with forest-plot of estimates
-plot_model(CVT_mod, title = "Coefficient of variation of Tree patch model" )
-
-#Plot saved as image (png) file
-ggplot2::ggsave(file="Coefficient of variation of Tree patch model.png",
-                width=120, height=150, units = "mm")
-
-#Plot model with random effects
-plot_model(CVT_mod, type = 're', title = "Random effects of Coefficient of variation of Tree patch model")
-ggplot2::ggsave(file="Random Effects of Coefficient of variation of Tree patch model.png",
-                width=120, height=150, units = "mm")
-
-#Plot model to check model assumptions
-plot_model(CVT_mod, type = 'diag')
-
-#table
-tab_model(CVT_mod,
-          ci.hyphen = ' to ',
-          show.ngroups = TRUE,
-          dv.labels= 'Coefficient of variation of Tree patch',
-          pred.labels = c('(Intercept)',
-                          'Median Household Income',
-                          '% non-White population',
-                          '% Hispanic population',
-                          '% Owner Occupied Housing',
-                          'Housing Age',
-                          'Terrain Roughness'))
-
-#Coefficient of variation of Grass patch  Model (Hillol):
-
-CVG_mod <- lmer(CV_G ~ Median_Household_Income+
-                   Perc_nonWhite +
-                   Perc_Hispanic + 
-                   Perc_Own_House +
-                   Housing_Age + 
-                   Terrain_Roughness +
-                   (1 | MSA),                               
-                 data = df) 
-
-#Plot model with forest-plot of estimates
-plot_model(CVG_mod, title = "Coefficient of variation of Grass patch model" )
-
-#Plot saved as image (png) file
-ggplot2::ggsave(file="Coefficient of variation of Grass patch model.png",
-                width=120, height=150, units = "mm")
-
-#Plot model with random effects
-plot_model(CVG_mod, type = 're', title = "Random effects of Coefficient of variation of Grass patch model")
-ggplot2::ggsave(file="Random Effects of Coefficient of variation of Grass patch model.png",
-                width=120, height=150, units = "mm")
-
-#Plot model to check model assumptions
-plot_model(CVG_mod, type = 'diag')
-
-#table
-tab_model(CVG_mod,
-          ci.hyphen = ' to ',
-          show.ngroups = TRUE,
-          dv.labels= 'Coefficient of variation of Grass patch',
-          pred.labels = c('(Intercept)',
-                          'Median Household Income',
-                          '% non-White population',
-                          '% Hispanic population',
-                          '% Owner Occupied Housing',
-                          'Housing Age',
-                          'Terrain Roughness')) 
-#end
-
-
-
+#Those were the codes that were prepared beforehand. Then comes the latest codes with the recent changes. I have deleted those.Hillol. 
 
