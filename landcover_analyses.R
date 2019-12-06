@@ -264,8 +264,6 @@ df %>% select(Perc_Tree, Perc_Grass, Perc_Other, Perc_Water,
 
 
 # boxplot mania!
-library(ggpubr)
-
 # fast an gives with-in city comparisons, but does not provide across-city comparisons
 df %>%
   mutate(Urbanicity_fct = 
@@ -398,7 +396,6 @@ df %>% ggplot(aes(MSA_Urb_Aff, Perc_Tree)) +
            hjust = 0)
 
 
-
 # mod <- lmer(Perc_Tree ~ Urbanicity_fct*Affluence_fct + (1 | MSA), data = df)
 mod <- lm(Perc_Tree ~ Urbanicity_fct*Affluence_fct*MSA, data = df)
 plot_model(mod)
@@ -528,6 +525,68 @@ tab_model(mod)
 #             xlab = 'Metropolitan Statistical Area',
 #             #add = 'jitter',  # Try turning this on and off with "#"
 #             legend = '')
+
+
+
+# Which dependent variables are normally distributed?
+# Perc_Tree      # % tree canopy cover
+# Perc_Grass     # % grass cover
+# Perc_Other     # % other area
+# Perc_Water     # % water area
+# NP_T           # Number of Patches Tree (distinct tree patches, group of pixels)
+# MPA_T          # Mean Patch Area Tree (the average size of tree patches)
+# CV_T           # TODO find out Coefficient of Variation for tree patches
+# PAratio_T      # Parimieter Area ratio for tree canopy
+# NP_G           # Number of Patches Grass
+# MPA_G          # Mean Patch Area Grass
+# CV_G           # TODO find out Coefficient of Variation for tree patches
+# PAratio_G      # Parimieter Area ratio for tree canopy
+
+# get the column index based on names, for the dependent varaibles (dv)
+start_dv <- which(colnames(df) == 'Perc_Tree')
+end_dv   <- which(colnames(df) == 'PAratio_G')
+
+# 11 is too many!
+end_dv - start_dv
+
+for(i in seq(start_dv, end_dv)){
+  # are they normally distributed?
+  p <- df %>% ggdensity(x = names(df)[i],
+                        add = 'mean',
+                        rug = TRUE,
+                        title = paste(names(df)[i])) #+ # + scale_x_sqrt()
+  # + scale_x_log10()
+  # annotate(geom = 'text', paste0('One-sample Kolmogorov-Smirnov test p-val: ',
+  #                                ks.test(x = df$Perc_Tree, y = pnorm)$p.value),
+  #          x = median(df[,i]),
+  #          y = .01)
+  # significant means NOT NORMAL
+  #shapiro.test(x = df$Perc_Tree)
+  
+  p_qq <- df %>% ggqqplot(names(df)[i],
+                          title = paste0('qq-plot for: ', names(df)[i],
+                                         '\npoints should be along line'))
+  plot_grid(p, p_qq)
+  
+  ggplot2::ggsave(plot = plot_grid(p, p_qq),  # the graph we just made with plot_grid()
+                  filename = paste0(getwd(), '/graphs/normality_', names(df)[i], '_',
+                                    gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                  width  = 6.5, # this is  as wide as a normal Word Doc page
+                  height = 4.5, # I had to play with this A LOT to get this to look right
+                  # the Plots tab in RStudio is not representative of what the
+                  # the saved version will look like
+                  units = 'in')
+  
+  print(ks.test(x = df[,i], y = pnorm)) # significant means not normal
+}
+
+# LITTERALLY NONE OF THESE PASSED THE TEST
+# 'Perc_' variable many need sqrt tranformation and/or use beta distribution?
+# 'NP_T' and 'NP_G' are counts (poisson?) and *might* be log normal?
+# 'MPA_T' and 'MPA_G' have zero-inflation issues
+# the others are ratios..?
+# https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#model-extensions
+
 
 
 ###
@@ -1347,4 +1406,21 @@ plot_model(CVG_mod, type = 'diag')
 # OK, but what comes next? I don't understand this collection of code below.
 # TODO HD: please delete or add helpful comments.
 #Those were the codes that were prepared beforehand. Then comes the latest codes with the recent changes. I have deleted those.Hillol. 
+
+
+df %>% ggplot(aes(x = MPA_T)) +
+  geom_histogram(binwidth = .05) +
+  scale_x_log10() +
+  facet_wrap(vars(MSA))
+
+df %>% gghistogram(x = 'MPA_T', add = 'mean', rug = TRUE, 
+                   color = 'MSA', fill = 'MSA', binwidth = 0.05,
+                   alpha = .15) +
+  scale_x_log10()
+
+df %>% ggdensity(x = 'MPA_T', add = 'mean', rug = TRUE, 
+                 color = 'MSA', fill = 'MSA',
+                 alpha = .15) +
+  scale_x_log10()
+
 
