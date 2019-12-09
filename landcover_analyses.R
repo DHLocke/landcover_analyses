@@ -3,12 +3,34 @@
 
 # started on
 # Mon Oct 21 19:58:30 2019 ------------------------------
-
+# man updates documented via git
 
 # clear the workspace
-rm(list=ls())           # depending on what other project you have loaded,
+#rm(list=ls())           # depending on what other project you have loaded,
                         # you may want to comment this out. This command
                         # removes everything from memory
+
+# NOTE HL: with object "packages" we can loop through the "citation()" function
+# to cite all of the packages in one go. Search for "CITE THE PACKGES"
+
+# packages we'll be using
+packages <- c('tidyverse',   # this is actually a collection of packages
+              'sf',          # used for reading shapefiles
+                             # lots of other great spatial functions, too, but we wont use them
+              'sjPlot',      # nice graphs and tables supporting many models
+              'lme4',        # fits multi-level models
+              'ggpubr',      # mixes base stats functions with ggplot graphics, its great!
+              'RColorBrewer',# good for colors
+              'cowplot',     # for multi-paned graphs NOTE THAT THIS MASKS ggplot2::ggsave()!!
+              'janitor',     # cleans things up
+              #'mulcompView') # supports significance letters for multiple comparisons, helpful formattings
+              'psych')        # useful data summaries
+
+# check for all of the libraries
+if (length(setdiff(packages, rownames(installed.packages()))) > 0) {
+  install.packages(setdiff(packages, rownames(installed.packages())))  
+}
+
 
 # load some useful libraries
 library(tidyverse)      # this is actually a collection of packages
@@ -20,11 +42,8 @@ library(ggpubr)         # mixes base stats functions with ggplot graphics, its g
 library(RColorBrewer)   # good for colors
 library(cowplot)        # for multi-paned graphs NOTE THAT THIS MASKS ggplot2::ggsave()!!
 library(janitor)        # cleans things up
-library(mulcompView)    # supports significance letters for multiple comparisons, helpful formattings
-
-# at the end lets make sure to do
-citation('tidyverse') # but for each package. There is a package called grateful that is supposed to help with 
-                      # citing each package but its kind of glitchy
+#library(mulcompView)    # supports significance letters for multiple comparisons, helpful formattings
+library(psych)          # useful data summaries
 
 # read in the data
 # you will have to change the file path to match the location of the data
@@ -214,7 +233,7 @@ df %>%
                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
             row.names = FALSE)
 
-library(psych)
+
 df %>% select(Perc_Tree, Perc_Grass, Perc_Other, Perc_Water,
               NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G) %>% 
   describe(fast = TRUE) %>% 
@@ -334,7 +353,7 @@ df %>%
 #                                         c('High', 'Low')),
 #                      label = 'p.signif')
 
-
+# under construction - ignore
 df %<>% # create new blocking variable with combinations of MSA, Urbanicity and Affluence
   mutate(Urbanicity_fct = 
            recode_factor(Urbanicity,
@@ -394,6 +413,7 @@ df %>% ggplot(aes(MSA_Urb_Aff, Perc_Tree)) +
            label = data.frame(my_letters$Letters)$my_letters,
            angle = 90,
            hjust = 0)
+# construction zone complete
 
 
 # mod <- lmer(Perc_Tree ~ Urbanicity_fct*Affluence_fct + (1 | MSA), data = df)
@@ -554,7 +574,7 @@ for(i in seq(start_dv, end_dv)){
   p <- df %>% ggdensity(x = names(df)[i],
                         add = 'mean',
                         rug = TRUE,
-                        title = paste(names(df)[i])) #+ # + scale_x_sqrt()
+                        title = paste(names(df)[i])) # + scale_x_sqrt()
   # + scale_x_log10()
   # annotate(geom = 'text', paste0('One-sample Kolmogorov-Smirnov test p-val: ',
   #                                ks.test(x = df$Perc_Tree, y = pnorm)$p.value),
@@ -582,8 +602,25 @@ for(i in seq(start_dv, end_dv)){
 
 # LITTERALLY NONE OF THESE PASSED THE TEST
 # 'Perc_' variable many need sqrt tranformation and/or use beta distribution?
-# 'NP_T' and 'NP_G' are counts (poisson?) and *might* be log normal?
-# 'MPA_T' and 'MPA_G' have zero-inflation issues
+# 'NP_T' and 'NP_G' are counts (poisson?) and *might* be log normal?        UPDATE, fails qqplot and ks.test
+# 'MPA_T' and 'MPA_G' have zero-inflation issues -                          UPDATE, just model PHX seperately, after removing zeros, 
+#                                                                                   AND logging
+df %>% gghistogram(x = 'MPA_T', add = 'mean', rug = TRUE, 
+                   color = 'MSA', fill = 'MSA', binwidth = 0.05,
+                   alpha = .15) + scale_x_log10()
+
+df %>% ggdensity(x = 'MPA_T', add = 'mean', rug = TRUE, 
+                 color = 'MSA', fill = 'MSA',
+                 alpha = .15) + scale_x_log10()
+
+df %>% gghistogram(x = 'MPA_G', add = 'mean', rug = TRUE, 
+                   color = 'MSA', fill = 'MSA', binwidth = 0.05,
+                   alpha = .15) + scale_x_log10()
+
+df %>% ggdensity(x = 'MPA_G', add = 'mean', rug = TRUE, 
+                 color = 'MSA', fill = 'MSA',
+                 alpha = .15) + scale_x_log10()
+
 # the others are ratios..?
 # https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#model-extensions
 
@@ -603,14 +640,15 @@ df$Terrain_Roughness       <- scale(df$SDE_STD, center = T) # WOW, the changed n
                                                             # that plot_mod() changes "_" to " "
 
 # first dependent variable: Perc_Tree
-p_tree_mod <- lmer(Perc_Tree ~ Median_Household_Income + # fixed effects
+p_tree_mod <- glmmTMB::glmmTMB(I(Perc_Tree / 100) ~ Median_Household_Income + # fixed effects
                      Percent_nonWhite +
                      Percent_Hispanic + 
                      Percent_Own_House +
                      Housing_Age + 
                      Terrain_Roughness +
                     (1 | MSA),                               # random effects
-                   data = df)
+                   data = test, family = beta_family(link = 'logit'))
+
 
 # FIXME LMER is 'wrong' because of the distribution of Perc_Tree - still need to fix this
 # df$pct_tree <- (df$Perc_Tree / 100) + 0.0001
@@ -647,7 +685,8 @@ p_tree_fe <- plot_model(p_tree_mod,                                      # save 
                    type = 'est',                                    # more explcit that accepting the defaults
                    title = 'Tree Canopy Cover (%):\nfixed effects', # "\n" means "new line"
                    sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
-                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+                   vline.color = 'black',
+                   axis.lim = c(.25, 1.25)) +                         # adds the zero line back in that theme_bw() takes out                              
   theme_bw(10)                                                      # number pertains to font size
 
 # peak at the graph
@@ -1413,14 +1452,10 @@ df %>% ggplot(aes(x = MPA_T)) +
   scale_x_log10() +
   facet_wrap(vars(MSA))
 
-df %>% gghistogram(x = 'MPA_T', add = 'mean', rug = TRUE, 
-                   color = 'MSA', fill = 'MSA', binwidth = 0.05,
-                   alpha = .15) +
-  scale_x_log10()
-
-df %>% ggdensity(x = 'MPA_T', add = 'mean', rug = TRUE, 
-                 color = 'MSA', fill = 'MSA',
-                 alpha = .15) +
-  scale_x_log10()
 
 
+
+# CITE THE PACKGES
+for(i in packages){
+  print(citation(paste(i)))
+}
