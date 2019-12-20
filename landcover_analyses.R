@@ -268,6 +268,16 @@ df %>% select(Perc_Tree, Perc_Grass, Perc_Other, Perc_Water,
                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
             row.names = FALSE)
 
+df %>% select(Perc_Tree, Perc_Grass, Perc_Other, Perc_Water,
+              NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
+              MSA, Urbanicity) %>% 
+  group_by(MSA, Urbanicity) %>% 
+  summarise_all(list(min = min, max = max, mean = mean, sd = sd)) %>%
+  ungroup() %>%  
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_Urban_wide_',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = FALSE)
+
 # group by MSA TALL
 df %>% select(Perc_Tree, Perc_Grass, Perc_Other, Perc_Water,
               NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
@@ -277,6 +287,68 @@ df %>% select(Perc_Tree, Perc_Grass, Perc_Other, Perc_Water,
   ungroup() %>%
   t() %>% 
   write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_tall_',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = TRUE)
+
+# group by MSA TALL
+df %>% select(Tree, Grass, Perc_Tree, Perc_Grass, 
+              NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
+              MSA) %>% 
+  group_by(MSA) %>% 
+  summarise_all(list(Min = min, Max = max, Mean = mean, SD = sd, Median=median)) %>%
+  ungroup() %>%
+  t() %>% 
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_tall_',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = TRUE)
+# group by MSA$Urbanicity
+df$Urbanicity_fct<- ifelse(df$Urbanicity==1, "Urban", ifelse(df$Urbanicity==2, "Suburban", "Exurban")) 
+Urbanicity_fct<-c("Urban", "Suburban", "Exurban")
+table(Urbanicity_fct)[3:1]
+table(df$Urbanicity_fct)
+
+df$Urbanicity_fct = 
+  recode_factor(df$Urbanicity,
+                `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban',
+                .ordered = TRUE)
+df %>% select(Tree, Grass, Perc_Tree, Perc_Grass, 
+                NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
+                MSA, Urbanicity_fct) %>% 
+  group_by(MSA, Urbanicity_fct) %>%
+  summarise_all(list(Min = min, Max = max, Mean = mean, SD = sd, Median=median)) %>%
+  ungroup() %>%
+  t() %>% 
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_Urb_tall_',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = TRUE)
+
+# group by MSA$Affluence
+
+df$Affluence_fct = 
+  recode_factor(df$Affluence,
+                `1` = 'High', `2` = 'Medium', `3` = 'Low',
+                .ordered = TRUE)
+df %>% select(Tree, Grass, Perc_Tree, Perc_Grass, 
+              NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
+              MSA, Affluence_fct) %>% 
+  group_by(MSA, Affluence_fct) %>% 
+  summarise_all(list(Min = min, Max = max, Mean = mean, SD = sd, Median=median)) %>%
+  ungroup() %>%
+  t() %>% 
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_Affl_tall_',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = TRUE)
+
+# group by MSA$Urbanicity$Affluence
+
+df %>% select(Tree, Grass, Perc_Tree, Perc_Grass, 
+              NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
+              MSA, Urbanicity_fct, Affluence_fct) %>% 
+  group_by(MSA, Urbanicity_fct, Affluence_fct) %>% 
+  summarise_all(list(Min = min, Max = max, Mean = mean, SD = sd, Median=median)) %>%
+  ungroup() %>%
+  t() %>% 
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_Urb_Affl_tall_',
                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
             row.names = TRUE)
 
