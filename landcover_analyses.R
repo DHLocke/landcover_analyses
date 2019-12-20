@@ -24,7 +24,8 @@ packages <- c('tidyverse',   # this is actually a collection of packages
               'cowplot',     # for multi-paned graphs NOTE THAT THIS MASKS ggplot2::ggsave()!!
               'janitor',     # cleans things up
               #'multcompView') # supports significance letters for multiple comparisons, helpful formattings
-              'psych')        # useful data summaries
+              'psych',         # useful data summaries
+              'see')           # model diagnostics
 
 # check for all of the libraries
 if (length(setdiff(packages, rownames(installed.packages()))) > 0) {
@@ -44,6 +45,7 @@ library(cowplot)        # for multi-paned graphs NOTE THAT THIS MASKS ggplot2::g
 library(janitor)        # cleans things up
 #library(multcompView)    # supports significance letters for multiple comparisons, helpful formattings
 library(psych)          # useful data summaries
+library(see)            # model diagnostics
 
 # read in the data
 # you will have to change the file path to match the location of the data
@@ -301,6 +303,119 @@ table(df$Affluence) # 1 high, 2 is medium, 3 is low
 #             row.names = TRUE)
 
 ### THE MAIN DESCRIPTIVE TABLES
+# group by MSA, Urbanicity
+df %>% mutate(Urbanicity_fct = 
+                recode_factor(Urbanicity,
+                              `1` = 'Urban',
+                              `2` = 'Suburban',
+                              `3` = 'Exurban', .ordered = TRUE)) %>% 
+  tabyl(MSA, Urbanicity_fct) %>% 
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/counts_per_MSA_Urb_Aff',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = TRUE)
+
+df %>% mutate(Urbanicity_fct = 
+                recode_factor(Urbanicity,
+                              `1` = 'Urban',
+                              `2` = 'Suburban',
+                              `3` = 'Exurban', .ordered = TRUE)) %>%
+  rename(Median_Household_Income = INC_MED_HS,
+         Percent_nonWhite = P_White,
+         Percent_Hispanic = P_Hisp,
+         Percent_Own_House = P_Own,
+         Housing_Age = HOUS_AGE,
+         Terrain_Roughness = SDE_STD) %>% 
+  select(Tree, Grass, Perc_Tree, Perc_Grass,                        # currently dependent variables
+         NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
+         Median_Household_Income, Percent_nonWhite, Percent_Hispanic, # independent variables 
+         Percent_Own_House, Housing_Age, Terrain_Roughness,           # independent variables 
+         MSA, Urbanicity_fct) %>%                      # grouping variables
+  group_by(MSA, Urbanicity_fct) %>%
+  summarise_all(list(Min = min, Max = max, Mean = mean, Median = median, SD = sd, IQR = IQR)) %>%
+  ungroup() %>%
+  select(MSA, Urbanicity_fct,
+         Tree_Min, Tree_Max, Tree_Mean, Tree_Median, Tree_SD, Tree_IQR,
+         Grass_Min, Grass_Max, Grass_Mean, Grass_Median, Grass_SD, Grass_IQR,
+         Perc_Tree_Min, Perc_Tree_Max, Perc_Tree_Mean, Perc_Tree_Median, Perc_Tree_SD, Perc_Tree_IQR,
+         Perc_Grass_Min, Perc_Grass_Max, Perc_Grass_Mean, Perc_Grass_Median, Perc_Grass_SD, Perc_Grass_IQR,
+         NP_T_Min, NP_T_Max, NP_T_Mean, NP_T_Median, NP_T_SD, NP_T_IQR,
+         MPA_T_Min, MPA_T_Max, MPA_T_Mean, MPA_T_Median, MPA_T_SD, MPA_T_IQR,
+         CV_T_Min, CV_T_Max, CV_T_Mean, CV_T_Median, CV_T_SD, CV_T_IQR,
+         PAratio_T_Min, PAratio_T_Max, PAratio_T_Mean, PAratio_T_Median, PAratio_T_SD, PAratio_T_IQR,
+         NP_G_Min, NP_G_Max, NP_G_Mean, NP_G_Median, NP_G_SD, NP_G_IQR,
+         MPA_G_Min, MPA_G_Max, MPA_G_Mean, MPA_G_Median, MPA_G_SD, MPA_G_IQR,
+         CV_G_Min, CV_G_Max, CV_G_Mean, CV_G_Median, CV_G_SD, CV_G_IQR,
+         PAratio_G_Min, PAratio_G_Max, PAratio_G_Mean, PAratio_G_Median, PAratio_G_SD, PAratio_G_IQR,
+         Median_Household_Income_Min, Median_Household_Income_Max, Median_Household_Income_Mean, Median_Household_Income_Median, Median_Household_Income_SD, Median_Household_Income_IQR,
+         Percent_nonWhite_Min, Percent_nonWhite_Max, Percent_nonWhite_Mean, Percent_nonWhite_Median, Percent_nonWhite_SD, Percent_nonWhite_IQR,
+         Percent_Hispanic_Min, Percent_Hispanic_Max, Percent_Hispanic_Mean, Percent_Hispanic_Median, Percent_Hispanic_SD, Percent_Hispanic_IQR,
+         Percent_Own_House_Min, Percent_Own_House_Max, Percent_Own_House_Mean, Percent_Own_House_Median, Percent_Own_House_SD, Percent_Own_House_IQR,
+         Housing_Age_Min, Housing_Age_Max, Housing_Age_Mean, Housing_Age_Median, Housing_Age_SD, Housing_Age_IQR,
+         Terrain_Roughness_Min, Terrain_Roughness_Max, Terrain_Roughness_Mean, Terrain_Roughness_Median, Terrain_Roughness_SD, Terrain_Roughness_IQR) %>% 
+  t() %>% # this transposes
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_Urb_tall_',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = TRUE)
+
+# CITY AND AFFLUENCE
+df %>% mutate(Affluence_fct =
+                recode_factor(Affluence,
+                              `1` = 'High',
+                              `2` = 'Middle',
+                              `3` = 'Low', .ordered = TRUE)) %>% 
+  tabyl(MSA, Affluence_fct) %>% 
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/counts_per_MSA_Aff_',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = TRUE)
+
+# THIS CONTAINS THE NEEDED STATS, TABLE ABOVE EXPLAINS SEEMING ERRONEOUS VALUES - BUT THEY MAKE
+# SENSE IN LIGHT OF THE DISTRIBUTION OF THE BLOCK GROUPS PER STRATA.
+df %>% mutate(Affluence_fct =
+                recode_factor(Affluence,
+                              `1` = 'High',
+                              `2` = 'Middle',
+                              `3` = 'Low', .ordered = TRUE)) %>%
+  rename(Median_Household_Income = INC_MED_HS,
+         Percent_nonWhite = P_White,
+         Percent_Hispanic = P_Hisp,
+         Percent_Own_House = P_Own,
+         Housing_Age = HOUS_AGE,
+         Terrain_Roughness = SDE_STD) %>% 
+  select(Tree, Grass, Perc_Tree, Perc_Grass,                        # currently dependent variables
+         NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
+         Median_Household_Income, Percent_nonWhite, Percent_Hispanic, # independent variables 
+         Percent_Own_House, Housing_Age, Terrain_Roughness,           # independent variables 
+         MSA, Affluence_fct) %>%                      # grouping variables
+  group_by(MSA, Affluence_fct) %>%
+  summarise_all(list(Min = min, Max = max, Mean = mean, Median = median, SD = sd, IQR = IQR)) %>%
+  ungroup() %>%
+  select(MSA, Affluence_fct,
+         Tree_Min, Tree_Max, Tree_Mean, Tree_Median, Tree_SD, Tree_IQR,
+         Grass_Min, Grass_Max, Grass_Mean, Grass_Median, Grass_SD, Grass_IQR,
+         Perc_Tree_Min, Perc_Tree_Max, Perc_Tree_Mean, Perc_Tree_Median, Perc_Tree_SD, Perc_Tree_IQR,
+         Perc_Grass_Min, Perc_Grass_Max, Perc_Grass_Mean, Perc_Grass_Median, Perc_Grass_SD, Perc_Grass_IQR,
+         NP_T_Min, NP_T_Max, NP_T_Mean, NP_T_Median, NP_T_SD, NP_T_IQR,
+         MPA_T_Min, MPA_T_Max, MPA_T_Mean, MPA_T_Median, MPA_T_SD, MPA_T_IQR,
+         CV_T_Min, CV_T_Max, CV_T_Mean, CV_T_Median, CV_T_SD, CV_T_IQR,
+         PAratio_T_Min, PAratio_T_Max, PAratio_T_Mean, PAratio_T_Median, PAratio_T_SD, PAratio_T_IQR,
+         NP_G_Min, NP_G_Max, NP_G_Mean, NP_G_Median, NP_G_SD, NP_G_IQR,
+         MPA_G_Min, MPA_G_Max, MPA_G_Mean, MPA_G_Median, MPA_G_SD, MPA_G_IQR,
+         CV_G_Min, CV_G_Max, CV_G_Mean, CV_G_Median, CV_G_SD, CV_G_IQR,
+         PAratio_G_Min, PAratio_G_Max, PAratio_G_Mean, PAratio_G_Median, PAratio_G_SD, PAratio_G_IQR,
+         Median_Household_Income_Min, Median_Household_Income_Max, Median_Household_Income_Mean, Median_Household_Income_Median, Median_Household_Income_SD, Median_Household_Income_IQR,
+         Percent_nonWhite_Min, Percent_nonWhite_Max, Percent_nonWhite_Mean, Percent_nonWhite_Median, Percent_nonWhite_SD, Percent_nonWhite_IQR,
+         Percent_Hispanic_Min, Percent_Hispanic_Max, Percent_Hispanic_Mean, Percent_Hispanic_Median, Percent_Hispanic_SD, Percent_Hispanic_IQR,
+         Percent_Own_House_Min, Percent_Own_House_Max, Percent_Own_House_Mean, Percent_Own_House_Median, Percent_Own_House_SD, Percent_Own_House_IQR,
+         Housing_Age_Min, Housing_Age_Max, Housing_Age_Mean, Housing_Age_Median, Housing_Age_SD, Housing_Age_IQR,
+         Terrain_Roughness_Min, Terrain_Roughness_Max, Terrain_Roughness_Mean, Terrain_Roughness_Median, Terrain_Roughness_SD, Terrain_Roughness_IQR) %>% 
+  t() %>% # this transposes
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_Aff_tall_',
+                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+            row.names = TRUE)
+
+
+
+# all THREE TOGETHER
 # group by MSA, Urbanicity and Affluence
 df %>% mutate(Urbanicity_fct = 
                 recode_factor(Urbanicity,
@@ -756,6 +871,25 @@ df$Terrain_Roughness       <- scale(df$SDE_STD, center = T) # WOW, the changed n
                                                             # that plot_mod() changes "_" to " "
 
 # first dependent variable: Perc_Tree
+p_tree_mod <- lme4::lmer(Perc_Tree ~ Median_Household_Income + # fixed effects
+                           Percent_nonWhite +
+                           Percent_Hispanic + 
+                           Percent_Own_House +
+                           Housing_Age + 
+                           Terrain_Roughness +
+                           (1 | MSA),                               # random effects
+                         data = df)
+
+result <- check_distribution(p_tree_mod); result; plot(result)
+p_tree_mod <- lme4::glmer(Perc_Tree + 0.01 ~ Median_Household_Income + # fixed effects
+                           Percent_nonWhite +
+                           Percent_Hispanic + 
+                           Percent_Own_House +
+                           Housing_Age + 
+                           Terrain_Roughness +
+                           (1 | MSA),                               # random effects
+                         data = df, family = Gamma())
+
 p_tree_mod <- glmmTMB::glmmTMB(I(Perc_Tree / 100) ~ Median_Household_Income + # fixed effects
                      Percent_nonWhite +
                      Percent_Hispanic + 
@@ -763,7 +897,7 @@ p_tree_mod <- glmmTMB::glmmTMB(I(Perc_Tree / 100) ~ Median_Household_Income + # 
                      Housing_Age + 
                      Terrain_Roughness +
                     (1 | MSA),                               # random effects
-                   data = test, family = beta_family(link = 'logit'))
+                   data = df, family = beta_family())
 
 
 # FIXME LMER is 'wrong' because of the distribution of Perc_Tree - still need to fix this
