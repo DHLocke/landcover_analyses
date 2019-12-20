@@ -23,7 +23,7 @@ packages <- c('tidyverse',   # this is actually a collection of packages
               'RColorBrewer',# good for colors
               'cowplot',     # for multi-paned graphs NOTE THAT THIS MASKS ggplot2::ggsave()!!
               'janitor',     # cleans things up
-              #'mulcompView') # supports significance letters for multiple comparisons, helpful formattings
+              #'multcompView') # supports significance letters for multiple comparisons, helpful formattings
               'psych')        # useful data summaries
 
 # check for all of the libraries
@@ -42,7 +42,7 @@ library(ggpubr)         # mixes base stats functions with ggplot graphics, its g
 library(RColorBrewer)   # good for colors
 library(cowplot)        # for multi-paned graphs NOTE THAT THIS MASKS ggplot2::ggsave()!!
 library(janitor)        # cleans things up
-#library(mulcompView)    # supports significance letters for multiple comparisons, helpful formattings
+#library(multcompView)    # supports significance letters for multiple comparisons, helpful formattings
 library(psych)          # useful data summaries
 
 # read in the data
@@ -101,10 +101,10 @@ names(df)
 
 # random effects
 table(df$MSA, useNA = 'ifany') # tabulates the number per category
-prop.table(table(df$MSA, useNA = 'ifany')) # distributions of block groups, as a %
-
-# or more refined
-prop.table(table(df$MSA, useNA = 'ifany'))*100 # actually in percent form
+# prop.table(table(df$MSA, useNA = 'ifany')) # distributions of block groups, as a %
+# 
+# # or more refined
+# prop.table(table(df$MSA, useNA = 'ifany'))*100 # actually in percent form
 
 # or even more refined! 
 round(prop.table(table(df$MSA, useNA = 'ifany'))*100, 2)# rounding 2 places, much prettier
@@ -117,266 +117,310 @@ help(table) # to see what the "useNA" argument is for
 # some descriptive statistics
 # counts per city
 # inspired by https://github.com/sfirke/janitor
-library(janitor)
-df %>% tabyl(MSA) %>% 
-  adorn_totals('row') %>% 
-  adorn_pct_formatting() %>% 
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_count_',
-                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
-            row.names = FALSE)
+# df %>% tabyl(MSA) %>% 
+#   adorn_totals('row') %>% 
+#   adorn_pct_formatting() %>% 
+#   write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_count_',
+#                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+#             row.names = FALSE)
 
 
-  
   
 # urbanicity
 table(df$Urbanicity, df$PNE_CODE, useNA = 'ifany')
 table(df$Urbanicity) # 1 is urban, 2 is suburban, 3 is exurban
 
-df %>%
-  mutate(Urbanicity_fct = 
-           recode_factor(Urbanicity,
-                         `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban')) %>% # do we prefer 'rural'))
-  tabyl(Urbanicity_fct) %>% 
-  adorn_totals('row') %>% 
-  adorn_pct_formatting() %>% 
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/Urbanicity_count_',
-                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
-            row.names = FALSE)
+# df %>%
+#   mutate(Urbanicity_fct = 
+#            recode_factor(Urbanicity,
+#                          `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban')) %>% # do we prefer 'rural'))
+#   tabyl(Urbanicity_fct) %>% 
+#   adorn_totals('row') %>% 
+#   adorn_pct_formatting() %>% 
+#   write.csv(., file = paste0(getwd(), '/tables/descriptives/Urbanicity_count_',
+#                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+#             row.names = FALSE)
 
-# city by urbanicity (sum by col)
-df %>%
-  mutate(Urbanicity_fct = 
-           recode_factor(Urbanicity,
-                         `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban')) %>% # do we prefer 'rural'))
-  tabyl(MSA, Urbanicity_fct) %>% 
-  adorn_totals('row') %>% 
-  adorn_percentages('col') %>%
-  adorn_pct_formatting() %>%
-  adorn_ns() %>% 
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Urbanicity_count_sum_by_col_',
-                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
-            row.names = FALSE)
+# # city by urbanicity (sum by col)
+# df %>%
+#   mutate(Urbanicity_fct = 
+#            recode_factor(Urbanicity,
+#                          `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban')) %>% # do we prefer 'rural'))
+#   tabyl(MSA, Urbanicity_fct) %>% 
+#   adorn_totals('row') %>% 
+#   adorn_percentages('col') %>%
+#   adorn_pct_formatting() %>%
+#   adorn_ns() %>% 
+#   write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Urbanicity_count_sum_by_col_',
+#                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+#             row.names = FALSE)
 
 # city by urbanicity (sum by row)
-df %>%
-  mutate(Urbanicity_fct = 
-           recode_factor(Urbanicity,
-                         `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban')) %>% # do we prefer 'rural'))
-  tabyl(MSA, Urbanicity_fct) %>% 
-  adorn_totals('col') %>% 
-  adorn_percentages('row') %>%
-  adorn_pct_formatting() %>%
-  adorn_ns() %>% 
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Urbanicity_count_sum_by_row_',
-                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
-            row.names = FALSE)
+# df %>%
+#   mutate(Urbanicity_fct = 
+#            recode_factor(Urbanicity,
+#                          `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban')) %>% # do we prefer 'rural'))
+#   tabyl(MSA, Urbanicity_fct) %>% 
+#   adorn_totals('col') %>% 
+#   adorn_percentages('row') %>%
+#   adorn_pct_formatting() %>%
+#   adorn_ns() %>% 
+#   write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Urbanicity_count_sum_by_row_',
+#                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+#             row.names = FALSE)
 
 
 # Affluence
 table(df$Affluence, df$PNE_CODE, useNA = 'ifany')
 table(df$Affluence) # 1 high, 2 is medium, 3 is low
 
-df %>%
-  mutate(Affluence_fct = 
-           recode_factor(Affluence,
-                         `1` = 'High', `2` = 'Middle', `3` = 'Low')) %>%
-  tabyl(Affluence_fct) %>% 
-  adorn_totals('row') %>% 
-  adorn_pct_formatting() %>% 
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/Affluence_count_',
-                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
-            row.names = FALSE)
+# df %>%
+#   mutate(Affluence_fct = 
+#            recode_factor(Affluence,
+#                          `1` = 'High', `2` = 'Middle', `3` = 'Low')) %>%
+#   tabyl(Affluence_fct) %>% 
+#   adorn_totals('row') %>% 
+#   adorn_pct_formatting() %>% 
+#   write.csv(., file = paste0(getwd(), '/tables/descriptives/Affluence_count_',
+#                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+#             row.names = FALSE)
 
-# city by Affluence (sum by col)
-df %>%
-  mutate(Affluence_fct = 
-           recode_factor(Affluence,
-                         `1` = 'High', `2` = 'Middle', `3` = 'Low')) %>%
-  tabyl(MSA, Affluence_fct) %>% 
-  adorn_totals('row') %>% 
-  adorn_percentages('col') %>%
-  adorn_pct_formatting() %>%
-  adorn_ns() %>% 
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Affluence_count_sum_by_col_',
-                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
-            row.names = FALSE)
-
-# city by urbanicty (sum by row)
-df %>%
-  mutate(Affluence_fct = 
-           recode_factor(Affluence,
-                         `1` = 'High', `2` = 'Middle', `3` = 'Low')) %>%
-  tabyl(MSA, Affluence_fct) %>% 
-  adorn_totals('col') %>% 
-  adorn_percentages('row') %>%
-  adorn_pct_formatting() %>%
-  adorn_ns() %>% 
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Affluence_count_sum_by_row',
-                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
-            row.names = FALSE)
-
-
-# MSA Urbanicity Affluence
-df %>%
-  mutate(Urbanicity_fct = 
-           recode_factor(Urbanicity,
-                         `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban'),
-         Affluence_fct = 
-           recode_factor(Affluence,
-                         `1` = 'High', `2` = 'Middle', `3` = 'Low')) %>%
-  tabyl(MSA, Urbanicity_fct, Affluence_fct) %>% 
-  adorn_totals('col') %>% 
-  adorn_percentages('row') %>%
-  adorn_pct_formatting() %>%
-  adorn_ns() %>% 
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Urbanicity_Affluence_count_sum_by_row',
-                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
-            row.names = FALSE)
-
-
-df %>% select(Perc_Tree, Perc_Grass, Perc_Other, Perc_Water,
-              NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G) %>% 
-  describe(fast = TRUE) %>% 
-  mutate(variable = row.names(.),
-         `variable description` = c('tree canopy cover (%)',
-                                    'grass cover (%)',
-                                    'other area (%)',
-                                    'water area (%)',
-                                    'Number of Patches Tree (distinct tree patches, group of pixels)',
-                                    'Mean Patch Area Tree (the average size of tree patches)',
-                                    'TODO find out Coefficient of Variation for tree patches',
-                                    'Parimieter Area ratio for tree canopy',
-                                    'Number of Patches Grass',
-                                    'Mean Patch Area Grass',
-                                    'TODO find out Coefficient of Variation for tree patches',
-                                    'Parimieter Area ratio for tree canopy')) %>% 
-  #select(variable, min, max, mean, sd, se, range, 'variable description') %>% 
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_',
-                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
-            row.names = FALSE)
+# # city by Affluence (sum by col)
+# df %>%
+#   mutate(Affluence_fct = 
+#            recode_factor(Affluence,
+#                          `1` = 'High', `2` = 'Middle', `3` = 'Low')) %>%
+#   tabyl(MSA, Affluence_fct) %>% 
+#   adorn_totals('row') %>% 
+#   adorn_percentages('col') %>%
+#   adorn_pct_formatting() %>%
+#   adorn_ns() %>% 
+#   write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Affluence_count_sum_by_col_',
+#                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+#             row.names = FALSE)
+# 
+# # city by urbanicty (sum by row)
+# df %>%
+#   mutate(Affluence_fct = 
+#            recode_factor(Affluence,
+#                          `1` = 'High', `2` = 'Middle', `3` = 'Low')) %>%
+#   tabyl(MSA, Affluence_fct) %>% 
+#   adorn_totals('col') %>% 
+#   adorn_percentages('row') %>%
+#   adorn_pct_formatting() %>%
+#   adorn_ns() %>% 
+#   write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Affluence_count_sum_by_row',
+#                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+#             row.names = FALSE)
+# 
+# 
+# # MSA Urbanicity Affluence
+# df %>%
+#   mutate(Urbanicity_fct = 
+#            recode_factor(Urbanicity,
+#                          `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban'),
+#          Affluence_fct = 
+#            recode_factor(Affluence,
+#                          `1` = 'High', `2` = 'Middle', `3` = 'Low')) %>%
+#   tabyl(MSA, Urbanicity_fct, Affluence_fct) %>% 
+#   adorn_totals('col') %>% 
+#   adorn_percentages('row') %>%
+#   adorn_pct_formatting() %>%
+#   adorn_ns() %>% 
+#   write.csv(., file = paste0(getwd(), '/tables/descriptives/MSA_Urbanicity_Affluence_count_sum_by_row',
+#                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+#             row.names = FALSE)
+# 
+# 
+# df %>% select(Perc_Tree, Perc_Grass, Perc_Other, Perc_Water,
+#               NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G) %>% 
+#   describe(fast = TRUE) %>% 
+#   mutate(variable = row.names(.),
+#          `variable description` = c('tree canopy cover (%)',
+#                                     'grass cover (%)',
+#                                     'other area (%)',
+#                                     'water area (%)',
+#                                     'Number of Patches Tree (distinct tree patches, group of pixels)',
+#                                     'Mean Patch Area Tree (the average size of tree patches)',
+#                                     'TODO find out Coefficient of Variation for tree patches',
+#                                     'Parimieter Area ratio for tree canopy',
+#                                     'Number of Patches Grass',
+#                                     'Mean Patch Area Grass',
+#                                     'TODO find out Coefficient of Variation for tree patches',
+#                                     'Parimieter Area ratio for tree canopy')) %>% 
+#   #select(variable, min, max, mean, sd, se, range, 'variable description') %>% 
+#   write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_',
+#                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+#             row.names = FALSE)
 
 # possibly an improved approach
 # https://rpkgs.datanovia.com/ggpubr/reference/desc_statby.html
 # group by MSA
-df %>% select(Perc_Tree, Perc_Grass, Perc_Other, Perc_Water,
-              NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
-              MSA) %>% 
-  group_by(MSA) %>% 
-  summarise_all(list(min = min, max = max, mean = mean, sd = sd)) %>%
-  ungroup() %>%  
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_wide_',
-                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
-            row.names = FALSE)
+# df %>% select(Perc_Tree, Perc_Grass, Perc_Other, Perc_Water,
+#               NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
+#               MSA) %>% 
+#   group_by(MSA) %>% 
+#   summarise_all(list(min = min, max = max, mean = mean, sd = sd)) %>%
+#   ungroup() %>%  
+#   write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_wide_',
+#                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+#             row.names = FALSE)
+# 
+# df %>% select(Perc_Tree, Perc_Grass, Perc_Other, Perc_Water,
+#               NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
+#               MSA, Urbanicity) %>% 
+#   group_by(MSA, Urbanicity) %>% 
+#   summarise_all(list(min = min, max = max, mean = mean, sd = sd)) %>%
+#   ungroup() %>%  
+#   write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_Urban_wide_',
+#                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+#             row.names = FALSE)
+# 
+# # group by MSA TALL
+# df %>% select(Perc_Tree, Perc_Grass, Perc_Other, Perc_Water,
+#               NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
+#               MSA) %>% 
+#   group_by(MSA) %>% 
+#   summarise_all(list(min = min, max = max, mean = mean, sd = sd)) %>%
+#   ungroup() %>%
+#   t() %>% 
+#   write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_tall_',
+#                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+#             row.names = TRUE)
+# 
+# # group by MSA TALL
+# df %>% select(Tree, Grass, Perc_Tree, Perc_Grass, 
+#               NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
+#               MSA) %>% 
+#   group_by(MSA) %>% 
+#   summarise_all(list(Min = min, Max = max, Mean = mean, SD = sd, Median=median)) %>%
+#   ungroup() %>%
+#   t() %>% 
+#   write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_tall_',
+#                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+#             row.names = TRUE)
 
-df %>% select(Perc_Tree, Perc_Grass, Perc_Other, Perc_Water,
-              NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
-              MSA, Urbanicity) %>% 
-  group_by(MSA, Urbanicity) %>% 
-  summarise_all(list(min = min, max = max, mean = mean, sd = sd)) %>%
-  ungroup() %>%  
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_Urban_wide_',
-                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
-            row.names = FALSE)
-
-# group by MSA TALL
-df %>% select(Perc_Tree, Perc_Grass, Perc_Other, Perc_Water,
-              NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
-              MSA) %>% 
-  group_by(MSA) %>% 
-  summarise_all(list(min = min, max = max, mean = mean, sd = sd)) %>%
-  ungroup() %>%
-  t() %>% 
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_tall_',
-                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
-            row.names = TRUE)
-
-# group by MSA TALL
-df %>% select(Tree, Grass, Perc_Tree, Perc_Grass, 
-              NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
-              MSA) %>% 
-  group_by(MSA) %>% 
-  summarise_all(list(Min = min, Max = max, Mean = mean, SD = sd, Median=median)) %>%
-  ungroup() %>%
-  t() %>% 
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_tall_',
-                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
-            row.names = TRUE)
-# group by MSA$Urbanicity
-df$Urbanicity_fct<- ifelse(df$Urbanicity==1, "Urban", ifelse(df$Urbanicity==2, "Suburban", "Exurban")) 
-Urbanicity_fct<-c("Urban", "Suburban", "Exurban")
-table(Urbanicity_fct)[3:1]
-table(df$Urbanicity_fct)
-
-df$Urbanicity_fct = 
-  recode_factor(df$Urbanicity,
-                `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban',
-                .ordered = TRUE)
-df %>% select(Tree, Grass, Perc_Tree, Perc_Grass, 
-                NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
-                MSA, Urbanicity_fct) %>% 
-  group_by(MSA, Urbanicity_fct) %>%
-  summarise_all(list(Min = min, Max = max, Mean = mean, SD = sd, Median=median)) %>%
-  ungroup() %>%
-  t() %>% 
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_Urb_tall_',
+### THE MAIN DESCRIPTIVE TABLES
+# group by MSA, Urbanicity and Affluence
+df %>% mutate(Urbanicity_fct = 
+                recode_factor(Urbanicity,
+                              `1` = 'Urban',
+                              `2` = 'Suburban',
+                              `3` = 'Exurban', .ordered = TRUE),
+              Affluence_fct =
+                recode_factor(Affluence,
+                              `1` = 'High',
+                              `2` = 'Middle',
+                              `3` = 'Low', .ordered = TRUE)) %>% 
+  tabyl(MSA, Urbanicity_fct, Affluence_fct) %>% 
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/counts_per_MSA_Urb_Aff_',
                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
             row.names = TRUE)
 
-# group by MSA$Affluence
-
-df$Affluence_fct = 
-  recode_factor(df$Affluence,
-                `1` = 'High', `2` = 'Medium', `3` = 'Low',
-                .ordered = TRUE)
-df %>% select(Tree, Grass, Perc_Tree, Perc_Grass, 
-              NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
-              MSA, Affluence_fct) %>% 
-  group_by(MSA, Affluence_fct) %>% 
-  summarise_all(list(Min = min, Max = max, Mean = mean, SD = sd, Median=median)) %>%
+# THIS CONTAINS THE NEEDED STATS, TABLE ABOVE EXPLAINS SEEMING ERRONEOUS VALUES - BUT THEY MAKE
+# SENSE IN LIGHT OF THE DISTRIBUTION OF THE BLOCK GROUPS PER STRATA.
+df %>% mutate(Urbanicity_fct = 
+                recode_factor(Urbanicity,
+                              `1` = 'Urban',
+                              `2` = 'Suburban',
+                              `3` = 'Exurban', .ordered = TRUE),
+              Affluence_fct =
+                recode_factor(Affluence,
+                              `1` = 'High',
+                              `2` = 'Middle',
+                              `3` = 'Low', .ordered = TRUE)) %>%
+  rename(Median_Household_Income = INC_MED_HS,
+         Percent_nonWhite = P_White,
+         Percent_Hispanic = P_Hisp,
+         Percent_Own_House = P_Own,
+         Housing_Age = HOUS_AGE,
+         Terrain_Roughness = SDE_STD) %>% 
+  select(Tree, Grass, Perc_Tree, Perc_Grass,                        # currently dependent variables
+         NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
+         Median_Household_Income, Percent_nonWhite, Percent_Hispanic, # independent variables 
+         Percent_Own_House, Housing_Age, Terrain_Roughness,           # independent variables 
+         MSA, Urbanicity_fct, Affluence_fct) %>%                      # grouping variables
+  group_by(MSA, Urbanicity_fct, Affluence_fct) %>%
+  summarise_all(list(Min = min, Max = max, Mean = mean, Median = median, SD = sd, IQR = IQR)) %>%
   ungroup() %>%
-  t() %>% 
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_Affl_tall_',
+  select(MSA, Urbanicity_fct, Affluence_fct,
+         Tree_Min, Tree_Max, Tree_Mean, Tree_Median, Tree_SD, Tree_IQR,
+         Grass_Min, Grass_Max, Grass_Mean, Grass_Median, Grass_SD, Grass_IQR,
+         Perc_Tree_Min, Perc_Tree_Max, Perc_Tree_Mean, Perc_Tree_Median, Perc_Tree_SD, Perc_Tree_IQR,
+         Perc_Grass_Min, Perc_Grass_Max, Perc_Grass_Mean, Perc_Grass_Median, Perc_Grass_SD, Perc_Grass_IQR,
+         NP_T_Min, NP_T_Max, NP_T_Mean, NP_T_Median, NP_T_SD, NP_T_IQR,
+         MPA_T_Min, MPA_T_Max, MPA_T_Mean, MPA_T_Median, MPA_T_SD, MPA_T_IQR,
+         CV_T_Min, CV_T_Max, CV_T_Mean, CV_T_Median, CV_T_SD, CV_T_IQR,
+         PAratio_T_Min, PAratio_T_Max, PAratio_T_Mean, PAratio_T_Median, PAratio_T_SD, PAratio_T_IQR,
+         NP_G_Min, NP_G_Max, NP_G_Mean, NP_G_Median, NP_G_SD, NP_G_IQR,
+         MPA_G_Min, MPA_G_Max, MPA_G_Mean, MPA_G_Median, MPA_G_SD, MPA_G_IQR,
+         CV_G_Min, CV_G_Max, CV_G_Mean, CV_G_Median, CV_G_SD, CV_G_IQR,
+         PAratio_G_Min, PAratio_G_Max, PAratio_G_Mean, PAratio_G_Median, PAratio_G_SD, PAratio_G_IQR,
+         Median_Household_Income_Min, Median_Household_Income_Max, Median_Household_Income_Mean, Median_Household_Income_Median, Median_Household_Income_SD, Median_Household_Income_IQR,
+         Percent_nonWhite_Min, Percent_nonWhite_Max, Percent_nonWhite_Mean, Percent_nonWhite_Median, Percent_nonWhite_SD, Percent_nonWhite_IQR,
+         Percent_Hispanic_Min, Percent_Hispanic_Max, Percent_Hispanic_Mean, Percent_Hispanic_Median, Percent_Hispanic_SD, Percent_Hispanic_IQR,
+         Percent_Own_House_Min, Percent_Own_House_Max, Percent_Own_House_Mean, Percent_Own_House_Median, Percent_Own_House_SD, Percent_Own_House_IQR,
+         Housing_Age_Min, Housing_Age_Max, Housing_Age_Mean, Housing_Age_Median, Housing_Age_SD, Housing_Age_IQR,
+         Terrain_Roughness_Min, Terrain_Roughness_Max, Terrain_Roughness_Mean, Terrain_Roughness_Median, Terrain_Roughness_SD, Terrain_Roughness_IQR) %>% 
+  t() %>% # this transposes
+  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_Urb_Aff_tall_',
                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
             row.names = TRUE)
 
-# group by MSA$Urbanicity$Affluence
-
-df %>% select(Tree, Grass, Perc_Tree, Perc_Grass, 
-              NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
-              MSA, Urbanicity_fct, Affluence_fct) %>% 
-  group_by(MSA, Urbanicity_fct, Affluence_fct) %>% 
-  summarise_all(list(Min = min, Max = max, Mean = mean, SD = sd, Median=median)) %>%
-  ungroup() %>%
-  t() %>% 
-  write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_Urb_Affl_tall_',
-                             gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
-            row.names = TRUE)
-
-
-
-# boxplot mania!
-# fast an gives with-in city comparisons, but does not provide across-city comparisons
-df %>%
-  mutate(Urbanicity_fct = 
-           recode_factor(Urbanicity,
-                         `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban',
-                         .ordered = TRUE),
-         Affluence_fct = 
-           recode_factor(Affluence,
-                         `1` = 'High', `2` = 'Middle', `3` = 'Low',
-                         .ordered = TRUE)) %>%
-  ggboxplot('Urbanicity_fct', 'Perc_Tree',
-            facet.by = 'MSA',
-            ylim = c(0, 125),
-            fill = 'Urbanicity_fct',
-            palette = 'Set2',
-            ylab = 'Tree Canopy Cover (%)', # more attractive label
-            xlab = 'Metropolitan Statistical Area',
-            legend = '') +
-  stat_compare_means(comparisons = list(c('Urban', 'Suburban'),
-                                        c('Suburban', 'Exurban'),
-                                        c('Urban', 'Exurban')),
-                     label = 'p.signif') 
+# # group by MSA$Affluence
+# df$Affluence_fct = 
+#   recode_factor(df$Affluence,
+#                 `1` = 'High', `2` = 'Medium', `3` = 'Low',
+#                 .ordered = TRUE)
+# df %>% select(Tree, Grass, Perc_Tree, Perc_Grass, 
+#               NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
+#               MSA, Affluence_fct) %>% 
+#   group_by(MSA, Affluence_fct) %>% 
+#   summarise_all(list(Min = min, Max = max, Mean = mean, SD = sd, Median=median)) %>%
+#   ungroup() %>%
+#   t() %>% 
+#   write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_Affl_tall_',
+#                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+#             row.names = TRUE)
+# 
+# # group by MSA$Urbanicity$Affluence
+# 
+# df %>% select(Tree, Grass, Perc_Tree, Perc_Grass, 
+#               NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
+#               MSA, Urbanicity_fct, Affluence_fct) %>% 
+#   group_by(MSA, Urbanicity_fct, Affluence_fct) %>% 
+#   summarise_all(list(Min = min, Max = max, Mean = mean, SD = sd, Median=median)) %>%
+#   ungroup() %>%
+#   t() %>% 
+#   write.csv(., file = paste0(getwd(), '/tables/descriptives/descriptive_stats_MSA_Urb_Affl_tall_',
+#                              gsub('[[:punct:]]', '_', Sys.time()), '.csv'),
+#             row.names = TRUE)
+# 
+# 
+# 
+# # boxplot mania!
+# # fast an gives with-in city comparisons, but does not provide across-city comparisons
+# df %>%
+#   mutate(Urbanicity_fct = 
+#            recode_factor(Urbanicity,
+#                          `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban',
+#                          .ordered = TRUE),
+#          Affluence_fct = 
+#            recode_factor(Affluence,
+#                          `1` = 'High', `2` = 'Middle', `3` = 'Low',
+#                          .ordered = TRUE)) %>%
+#   ggboxplot('Urbanicity_fct', 'Perc_Tree',
+#             facet.by = 'MSA',
+#             ylim = c(0, 125),
+#             fill = 'Urbanicity_fct',
+#             palette = 'Set2',
+#             ylab = 'Tree Canopy Cover (%)', # more attractive label
+#             xlab = 'Metropolitan Statistical Area',
+#             legend = '') +
+#   stat_compare_means(comparisons = list(c('Urban', 'Suburban'),
+#                                         c('Suburban', 'Exurban'),
+#                                         c('Urban', 'Exurban')),
+#                      label = 'p.signif') 
 
 
 df %>%
