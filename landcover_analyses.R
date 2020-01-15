@@ -62,7 +62,7 @@ getwd()               # "/Users/dlocke/msb/LandCoverPaper/landcover_analyses"
 
 # take a look at the data of cbg
 sf
-names(sf)
+names(sf) # double check the names of the file
 
 # we don't actually need the polygons here, so lets pull the data frame out
 # that's like working with the attribute table in ArcGIS, but not the spatial data
