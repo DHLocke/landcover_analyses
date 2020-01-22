@@ -1,6 +1,9 @@
 # Script by Dexter H Locke and Hillol Dutta
 # for analyzing land cover composition, as part of the MacroSystems Biology project
 
+# some files of interest here:
+# https://www.dropbox.com/home/MacroBio%20AAG%20gallery
+
 # started on
 # Mon Oct 21 19:58:30 2019 ------------------------------
 # man updates documented via git
@@ -537,6 +540,7 @@ df %>% mutate(Urbanicity_fct =
 #                                         c('Urban', 'Exurban')),
 #                      label = 'p.signif') 
 
+# TODO SW update box plots
 
 df %>%
   mutate(Urbanicity_fct = 
@@ -546,8 +550,9 @@ df %>%
          Affluence_fct = 
            recode_factor(Affluence,
                          `1` = 'High', `2` = 'Medium', `3` = 'Low',
-                         .ordered = TRUE)) %>%
-  ggboxplot('Affluence_fct', 'Perc_Tree',
+                         .ordered = TRUE),
+         combo = paste0(Urbanicity_fct, Affluence_fct)) %>%
+  ggboxplot('combo', 'Perc_Tree',
             facet.by = 'MSA',
             ylim = c(0, 125),
             fill = 'Affluence_fct',
@@ -869,6 +874,18 @@ df$Percent_Own_House          <- scale(df$P_Own, center = T)
 df$Housing_Age             <- scale(df$HOUS_AGE, center = T)
 df$Terrain_Roughness       <- scale(df$SDE_STD, center = T) # WOW, the changed names print great in plot_model, I didn't know
                                                             # that plot_mod() changes "_" to " "
+
+# FIXME DHL (with SW) to determine functional form / transformation is needed
+# TODO; easy stats diagnositcs via check_distribution() function
+# TODO make a summary table of funcational forms / transformations
+# TODO update normality and Combined effect
+
+# TODO change Non-white to Percent White and flip the sign
+
+# TODO add Population Density "POPD_SQKM" into the continuous analyses
+# TODO experiment with square (and quantiles?) for income and Housing Age
+
+
 
 # first dependent variable: Perc_Tree
 p_tree_mod <- lme4::lmer(Perc_Tree ~ Median_Household_Income + # fixed effects
