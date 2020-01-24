@@ -323,14 +323,14 @@ df %>% mutate(Urbanicity_fct =
                               `2` = 'Suburban',
                               `3` = 'Exurban', .ordered = TRUE)) %>%
   rename(Median_Household_Income = INC_MED_HS,
-         Percent_nonWhite = P_White,
+         P_White = P_White,
          Percent_Hispanic = P_Hisp,
          Percent_Own_House = P_Own,
          Housing_Age = HOUS_AGE,
          Terrain_Roughness = SDE_STD) %>% 
   select(Tree, Grass, Perc_Tree, Perc_Grass,                        # currently dependent variables
          NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
-         Median_Household_Income, Percent_nonWhite, Percent_Hispanic, # independent variables 
+         Median_Household_Income, P_White, Percent_Hispanic, # independent variables 
          Percent_Own_House, Housing_Age, Terrain_Roughness,           # independent variables 
          MSA, Urbanicity_fct) %>%                      # grouping variables
   group_by(MSA, Urbanicity_fct) %>%
@@ -350,7 +350,7 @@ df %>% mutate(Urbanicity_fct =
          CV_G_Min, CV_G_Max, CV_G_Mean, CV_G_Median, CV_G_SD, CV_G_IQR,
          PAratio_G_Min, PAratio_G_Max, PAratio_G_Mean, PAratio_G_Median, PAratio_G_SD, PAratio_G_IQR,
          Median_Household_Income_Min, Median_Household_Income_Max, Median_Household_Income_Mean, Median_Household_Income_Median, Median_Household_Income_SD, Median_Household_Income_IQR,
-         Percent_nonWhite_Min, Percent_nonWhite_Max, Percent_nonWhite_Mean, Percent_nonWhite_Median, Percent_nonWhite_SD, Percent_nonWhite_IQR,
+         P_White_Min, P_White_Max, P_White_Mean, P_White_Median, P_White_SD, P_White_IQR,
          Percent_Hispanic_Min, Percent_Hispanic_Max, Percent_Hispanic_Mean, Percent_Hispanic_Median, Percent_Hispanic_SD, Percent_Hispanic_IQR,
          Percent_Own_House_Min, Percent_Own_House_Max, Percent_Own_House_Mean, Percent_Own_House_Median, Percent_Own_House_SD, Percent_Own_House_IQR,
          Housing_Age_Min, Housing_Age_Max, Housing_Age_Mean, Housing_Age_Median, Housing_Age_SD, Housing_Age_IQR,
@@ -379,14 +379,14 @@ df %>% mutate(Affluence_fct =
                               `2` = 'Middle',
                               `3` = 'Low', .ordered = TRUE)) %>%
   rename(Median_Household_Income = INC_MED_HS,
-         Percent_nonWhite = P_White,
+         P_White = P_White,
          Percent_Hispanic = P_Hisp,
          Percent_Own_House = P_Own,
          Housing_Age = HOUS_AGE,
          Terrain_Roughness = SDE_STD) %>% 
   select(Tree, Grass, Perc_Tree, Perc_Grass,                        # currently dependent variables
          NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
-         Median_Household_Income, Percent_nonWhite, Percent_Hispanic, # independent variables 
+         Median_Household_Income, P_White, Percent_Hispanic, # independent variables 
          Percent_Own_House, Housing_Age, Terrain_Roughness,           # independent variables 
          MSA, Affluence_fct) %>%                      # grouping variables
   group_by(MSA, Affluence_fct) %>%
@@ -406,7 +406,7 @@ df %>% mutate(Affluence_fct =
          CV_G_Min, CV_G_Max, CV_G_Mean, CV_G_Median, CV_G_SD, CV_G_IQR,
          PAratio_G_Min, PAratio_G_Max, PAratio_G_Mean, PAratio_G_Median, PAratio_G_SD, PAratio_G_IQR,
          Median_Household_Income_Min, Median_Household_Income_Max, Median_Household_Income_Mean, Median_Household_Income_Median, Median_Household_Income_SD, Median_Household_Income_IQR,
-         Percent_nonWhite_Min, Percent_nonWhite_Max, Percent_nonWhite_Mean, Percent_nonWhite_Median, Percent_nonWhite_SD, Percent_nonWhite_IQR,
+         P_White_Min, P_White_Max, P_White_Mean, P_White_Median, P_White_SD, P_White_IQR,
          Percent_Hispanic_Min, Percent_Hispanic_Max, Percent_Hispanic_Mean, Percent_Hispanic_Median, Percent_Hispanic_SD, Percent_Hispanic_IQR,
          Percent_Own_House_Min, Percent_Own_House_Max, Percent_Own_House_Mean, Percent_Own_House_Median, Percent_Own_House_SD, Percent_Own_House_IQR,
          Housing_Age_Min, Housing_Age_Max, Housing_Age_Mean, Housing_Age_Median, Housing_Age_SD, Housing_Age_IQR,
@@ -448,14 +448,14 @@ df %>% mutate(Urbanicity_fct =
                               `2` = 'Middle',
                               `3` = 'Low', .ordered = TRUE)) %>%
   rename(Median_Household_Income = INC_MED_HS,
-         Percent_nonWhite = P_White,
+         P_White = P_White,
          Percent_Hispanic = P_Hisp,
          Percent_Own_House = P_Own,
          Housing_Age = HOUS_AGE,
          Terrain_Roughness = SDE_STD) %>% 
   select(Tree, Grass, Perc_Tree, Perc_Grass,                        # currently dependent variables
          NP_T, MPA_T, CV_T, PAratio_T, NP_G, MPA_G, CV_G, PAratio_G,
-         Median_Household_Income, Percent_nonWhite, Percent_Hispanic, # independent variables 
+         Median_Household_Income, P_White, Percent_Hispanic, # independent variables 
          Percent_Own_House, Housing_Age, Terrain_Roughness,           # independent variables 
          MSA, Urbanicity_fct, Affluence_fct) %>%                      # grouping variables
   group_by(MSA, Urbanicity_fct, Affluence_fct) %>%
@@ -475,7 +475,7 @@ df %>% mutate(Urbanicity_fct =
          CV_G_Min, CV_G_Max, CV_G_Mean, CV_G_Median, CV_G_SD, CV_G_IQR,
          PAratio_G_Min, PAratio_G_Max, PAratio_G_Mean, PAratio_G_Median, PAratio_G_SD, PAratio_G_IQR,
          Median_Household_Income_Min, Median_Household_Income_Max, Median_Household_Income_Mean, Median_Household_Income_Median, Median_Household_Income_SD, Median_Household_Income_IQR,
-         Percent_nonWhite_Min, Percent_nonWhite_Max, Percent_nonWhite_Mean, Percent_nonWhite_Median, Percent_nonWhite_SD, Percent_nonWhite_IQR,
+         P_White_Min, P_White_Max, P_White_Mean, P_White_Median, P_White_SD, P_White_IQR,
          Percent_Hispanic_Min, Percent_Hispanic_Max, Percent_Hispanic_Mean, Percent_Hispanic_Median, Percent_Hispanic_SD, Percent_Hispanic_IQR,
          Percent_Own_House_Min, Percent_Own_House_Max, Percent_Own_House_Mean, Percent_Own_House_Median, Percent_Own_House_SD, Percent_Own_House_IQR,
          Housing_Age_Min, Housing_Age_Max, Housing_Age_Mean, Housing_Age_Median, Housing_Age_SD, Housing_Age_IQR,
@@ -868,7 +868,7 @@ df %>% ggdensity(x = 'MPA_G', add = 'mean', rug = TRUE,
 ### guinis H, Gottfredson RK, Culpepper SA (2013) Best-Practice Recommendations for Estimating Cross-Level Interaction Effects Using Multilevel Modeling. J Manage 39(6):1490–1528.
 df$Median_Household_Income <- scale(df$INC_MED_HS, center = T)
 #df$`Percent_non-White`           <- scale(I(100 - df$P_White), center = T) # so this didn't really work out. :-/
-df$Percent_nonWhite           <- scale(I(100 - df$P_White), center = T) # so this didn't really work out. :-/
+df$Percent_White           <- scale(df$Percent_White, center = T) # so this didn't really work out. :-/
 df$Percent_Hispanic           <- scale(df$P_Hisp, center = T)
 df$Percent_Own_House          <- scale(df$P_Own, center = T)
 df$Housing_Age             <- scale(df$HOUS_AGE, center = T)
@@ -889,7 +889,7 @@ df$Terrain_Roughness       <- scale(df$SDE_STD, center = T) # WOW, the changed n
 
 # first dependent variable: Perc_Tree
 p_tree_mod <- lme4::lmer(Perc_Tree ~ Median_Household_Income + # fixed effects
-                           Percent_nonWhite +
+                           Percent_White +
                            Percent_Hispanic + 
                            Percent_Own_House +
                            Housing_Age + 
@@ -899,7 +899,7 @@ p_tree_mod <- lme4::lmer(Perc_Tree ~ Median_Household_Income + # fixed effects
 
 result <- check_distribution(p_tree_mod); result; plot(result)
 p_tree_mod <- lme4::glmer(Perc_Tree + 0.01 ~ Median_Household_Income + # fixed effects
-                           Percent_nonWhite +
+                           Percent_White +
                            Percent_Hispanic + 
                            Percent_Own_House +
                            Housing_Age + 
@@ -908,7 +908,7 @@ p_tree_mod <- lme4::glmer(Perc_Tree + 0.01 ~ Median_Household_Income + # fixed e
                          data = df, family = Gamma())
 
 p_tree_mod <- glmmTMB::glmmTMB(I(Perc_Tree / 100) ~ Median_Household_Income + # fixed effects
-                     Percent_nonWhite +
+                     Percent_White +
                      Percent_Hispanic + 
                      Percent_Own_House +
                      Housing_Age + 
@@ -921,7 +921,7 @@ p_tree_mod <- glmmTMB::glmmTMB(I(Perc_Tree / 100) ~ Median_Household_Income + # 
 # df$pct_tree <- (df$Perc_Tree / 100) + 0.0001
 # par(mfrow=c(1, 2)); hist(df$Perc_Tree); hist(df$pct_tree)
 # p_tree_mod <- glmmTMB::glmmTMB(pct_tree ~ Median_Household_Income + # fixed effects # just being very verbose with "::"
-#                      Percent_nonWhite +
+#                      Percent_White +
 #                      Percent_Hispanic + 
 #                      Percent_Own_House +
 #                      Housing_Age + 
@@ -1075,7 +1075,7 @@ fig_u   <- 'in'
 
 # FIXME (DHL) to use better response distribution
 p_grass_mod <- lmer(Perc_Grass ~Median_Household_Income + # fixed effects
-                      Percent_nonWhite +
+                      Percent_White +
                       Percent_Hispanic + 
                       Percent_Own_House +
                       Housing_Age + 
@@ -1133,7 +1133,7 @@ plot_model(p_grass_mod, type = 'diag')
 
 # FIXME (DHL) to use better response distribution
 p_other_mod <- lmer(Perc_Other ~Median_Household_Income + # fixed effects
-                      Percent_nonWhite +
+                      Percent_White +
                       Percent_Hispanic + 
                       Percent_Own_House +
                       Housing_Age + 
@@ -1191,7 +1191,7 @@ plot_model(p_other_mod, type = 'diag')
 
 # FIXME (DHL) to use better response distribution
 p_water_mod <- lmer(Perc_Water ~Median_Household_Income + # fixed effects
-                      Percent_nonWhite +
+                      Percent_White +
                       Percent_Hispanic + 
                       Percent_Own_House +
                       Housing_Age + 
@@ -1255,7 +1255,7 @@ tab_model(p_tree_mod,     # four models
 #Mean patch area Tree Model (Hillol):
 # FIXME (DHL) to use better response distribution ??
 MPT_mod <- lmer(MPA_T ~ Median_Household_Income+
-                      Percent_nonWhite +
+                      Percent_White +
                       Percent_Hispanic + 
                       Percent_Own_House +
                       Housing_Age + 
@@ -1314,7 +1314,7 @@ tab_model(MPT_mod,
 # Mean patch area Grass Model (Hillol):
 # FIXME (DHL) to use better response distribution ??
 MPG_mod <- lmer(MPA_G ~ Median_Household_Income+
-                  Percent_nonWhite +
+                  Percent_White +
                   Percent_Hispanic + 
                   Percent_Own_House +
                   Housing_Age + 
@@ -1370,7 +1370,7 @@ tab_model(MPG_mod,
 # FIXME (DHL) to use better response distribution ??
 # Number of patch area Tree Model (Hillol):
 NPT_mod <- lmer(NP_T ~ Median_Household_Income+
-                  Percent_nonWhite +
+                  Percent_White +
                   Percent_Hispanic + 
                   Percent_Own_House +
                   Housing_Age + 
@@ -1426,7 +1426,7 @@ tab_model(NPT_mod,
 # FIXME (DHL) to use better response distribution ??
 # Number of patches of Grass (Hillol):
 NPG_mod <- lmer(NP_G ~ Median_Household_Income+
-                  Percent_nonWhite +
+                  Percent_White +
                   Percent_Hispanic + 
                   Percent_Own_House +
                   Housing_Age + 
@@ -1484,7 +1484,7 @@ plot_model(NPG_mod, type = 'diag')
 #Perimeter-Area ratio of Tree canopy Model (Hillol):
 
 PART_mod <- lmer(PAratio_T ~ Median_Household_Income+
-                  Percent_nonWhite +
+                  Percent_White +
                   Percent_Hispanic + 
                   Percent_Own_House +
                   Housing_Age + 
@@ -1538,7 +1538,7 @@ plot_model(PART_mod, type = 'diag')
 
 #Perimeter-Area Ratio of Grass Model (Hillol):
 PARG_mod <- lmer(PAratio_T ~ Median_Household_Income+
-                   Percent_nonWhite +
+                   Percent_White +
                    Percent_Hispanic + 
                    Percent_Own_House +
                    Housing_Age + 
@@ -1593,7 +1593,7 @@ plot_model(PARG_mod, type = 'diag')
 #Coefficient of variation of Tree patch Model (Hillol):
 
 CVT_mod <- lmer(CV_T ~ Median_Household_Income+
-                   Percent_nonWhite +
+                   Percent_White +
                    Percent_Hispanic + 
                    Percent_Own_House +
                    Housing_Age + 
@@ -1652,7 +1652,7 @@ plot_model(CVT_mod, type = 'diag')
 #Coefficient of variation of Grass patch  Model (Hillol):
 
 CVG_mod <- lmer(CV_G ~ Median_Household_Income+
-                  Percent_nonWhite +
+                  Percent_White +
                   Percent_Hispanic + 
                   Percent_Own_House +
                   Housing_Age + 
