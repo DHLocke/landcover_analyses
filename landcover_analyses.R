@@ -782,6 +782,24 @@ tab_model(mod)
 #             #add = 'jitter',  # Try turning this on and off with "#"
 #             legend = '')
 
+#SW updated boxplots DOESNOT include MSA in x - axis
+df %>%
+  mutate(Urbanicity_fct = 
+           recode_factor(Urbanicity,
+                         `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban',
+                         .ordered = TRUE),
+         urbanvar = paste0(Urbanicity_fct)) %>%
+  ggboxplot(y = 'Perc_Tree', # continuous dependent variable
+            x = 'urbanvar',       # categorical grouping variable
+            fill = 'MSA',    # what to color by
+            facet.by = 'MSA',
+            palette = 'Set1',# what colors to use
+            #ylim = c(0, 150),# the value of Y (% tree canopy) hypothetically can range from 0 to 100
+            ylab = 'Tree Canopy Cover (%)', # more attractive label
+            xlab = 'Metropolitan Statistical Area Urbanicity',
+            #add = 'jitter',  # Try turning this on and off with "#"
+            legend = '') #+ theme(axis.text.x = element_text(angle = 90)) #Adjsuts the labels angle
+
 
 
 # Which dependent variables are normally distributed?
