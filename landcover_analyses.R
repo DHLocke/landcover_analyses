@@ -518,29 +518,30 @@ df %>% mutate(Urbanicity_fct =
 # 
 # # boxplot mania!
 # # fast an gives with-in city comparisons, but does not provide across-city comparisons
-# df %>%
-#   mutate(Urbanicity_fct = 
-#            recode_factor(Urbanicity,
-#                          `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban',
-#                          .ordered = TRUE),
-#          Affluence_fct = 
-#            recode_factor(Affluence,
-#                          `1` = 'High', `2` = 'Middle', `3` = 'Low',
-#                          .ordered = TRUE)) %>%
-#   ggboxplot('Urbanicity_fct', 'Perc_Tree',
-#             facet.by = 'MSA',
-#             ylim = c(0, 125),
-#             fill = 'Urbanicity_fct',
-#             palette = 'Set2',
-#             ylab = 'Tree Canopy Cover (%)', # more attractive label
-#             xlab = 'Metropolitan Statistical Area',
-#             legend = '') +
-#   stat_compare_means(comparisons = list(c('Urban', 'Suburban'),
-#                                         c('Suburban', 'Exurban'),
-#                                         c('Urban', 'Exurban')),
-#                      label = 'p.signif') 
-
-# TODO SW update box plots
+ df %>%
+   mutate(Urbanicity_fct = 
+            recode_factor(Urbanicity,
+                          `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban',
+                          .ordered = TRUE),
+          Affluence_fct = 
+            recode_factor(Affluence,
+                          `1` = 'High', `2` = 'Middle', `3` = 'Low',
+                          .ordered = TRUE),
+          combo = paste0(Urbanicity_fct, "_", Affluence_fct)) %>%
+   ggboxplot('combo', 'Perc_Tree',
+             facet.by = 'MSA',
+             ylim = c(0, 125),
+             fill = 'Urbanicity_fct',
+             palette = 'Set1',
+             ylab = 'Tree Canopy Cover (%)', # more attractive label
+             xlab = 'Metropolitan Statistical Area',
+             legend = '') +
+   stat_compare_means(comparisons = list(c('Urban', 'Suburban'),
+                                         c('Suburban', 'Exurban'),
+                                         c('Urban', 'Exurban')),
+                      label = 'p.signif') + 
+   theme(axis.text.x = element_text(angle = 90))
+## TODO SW update box plots
 
 df %>%
   mutate(Urbanicity_fct = 
@@ -556,7 +557,7 @@ df %>%
             facet.by = 'MSA',
             ylim = c(0, 125),
             fill = 'Affluence_fct',
-            palette = 'Set3',
+            palette = 'Set1',
             ylab = 'Tree Canopy Cover (%)', # more attractive label
             xlab = 'Metropolitan Statistical Area',
             legend = '') +
@@ -718,16 +719,16 @@ tab_model(mod)
 #                  legend = '')
 # 
 # # add some stats
-# df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
-#                  x = 'MSA',       # categorical grouping variable
-#                  fill = 'MSA',    # what to color by
-#                  palette = 'Set1',# what colors to use
-#                  ylim = c(0, 100),# the value of Y (% tree canopy) hypothetically can range from 0 to 100
-#                  ylab = 'Tree Canopy Cover (%)', # more attractive label
-#                  xlab = 'Metropolitan Statistical Area',
-#                  #add = 'jitter',  # Try turning this on and off with "#"
-#                  legend = '') + 
-#   stat_compare_means() -> city_tree_plot# answers the question "are thes medians different from eachother"
+ # df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
+ #                  x = 'MSA',       # categorical grouping variable
+ #                  fill = 'MSA',    # what to color by
+ #                  palette = 'Set1',# what colors to use
+ #                  ylim = c(0, 100),# the value of Y (% tree canopy) hypothetically can range from 0 to 100
+ #                  ylab = 'Tree Canopy Cover (%)', # more attractive label
+ #                  xlab = 'Metropolitan Statistical Area',
+ #                  #add = 'jitter',  # Try turning this on and off with "#"
+ #                  legend = '') + 
+ #   stat_compare_means() -> city_tree_plot# answers the question "are thes medians different from eachother"
 # 
 # # YES, see the Kruska-Wallis test results now?
 # 
@@ -735,24 +736,24 @@ tab_model(mod)
 # city_tree_plot
 # 
 # # but we want to know which pairs are different
-# city_comps <- list(c('PHX', 'MSP'),
-#                    c('PHX', 'MIA'),
-#                    c('PHX', 'LAX'),
-#                    c('PHX', 'BOS'),
-#                    c('PHX', 'BAL'))
-# 
-# # now doing multiple comparisions
-# df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
-#                  x = 'MSA',       # categorical grouping variable
-#                  fill = 'MSA',    # what to color by
-#                  palette = 'Set1',# what colors to use
-#                  ylim = c(0, 150),# ADDED space for new lables
-#                  ylab = 'Tree Canopy Cover (%)', # more attractive label
-#                  xlab = 'Metropolitan Statistical Area',
-#                  #add = 'jitter',  # Try turning this on and off with "#"
-#                  legend = '') + 
-#   stat_compare_means() + 
-#   stat_compare_means(comparisons = city_comps)-> city_tree_plot
+#  city_comps <- list(c('PHX', 'MSP'),
+#                     c('PHX', 'MIA'),
+#                     c('PHX', 'LAX'),
+#                     c('PHX', 'BOS'),
+#                     c('PHX', 'BAL'))
+# # 
+# # # now doing multiple comparisions
+#  df %>% ggboxplot(y = 'Perc_Tree', # continuous dependent variable
+#                   x = 'MSA',       # categorical grouping variable
+#                   fill = 'MSA',    # what to color by
+#                   palette = 'Set1',# what colors to use
+#                   ylim = c(0, 150),# ADDED space for new lables
+#                   ylab = 'Tree Canopy Cover (%)', # more attractive label
+#                   xlab = 'Metropolitan Statistical Area',
+#                   #add = 'jitter',  # Try turning this on and off with "#"
+#                   legend = '') + 
+#    stat_compare_means() + 
+#    stat_compare_means(comparisons = city_comps)-> city_tree_plot
 # 
 # # chceck it out!
 # city_tree_plot
@@ -799,6 +800,44 @@ df %>%
             xlab = '\n Metropolitan Statistical Area | Urbanicity', #Add an extra line between axis and axis title
             #add = 'jitter',  # Try turning this on and off with "#"
             legend = '') 
+
+#SW updated boxplot with stats plots DV against Urbanicity
+df %>%
+  mutate(Urbanicity_fct = 
+           recode_factor(Urbanicity,
+                         `1` = 'Urban', `2` = 'Suburban', `3` = 'Exurban',
+                         .ordered = TRUE)) %>%
+  ggboxplot('Urbanicity_fct', 'Perc_Tree',
+            facet.by = 'MSA',
+            ylim = c(0, 120),
+            fill = 'Urbanicity_fct',
+            palette = 'Set1',
+            ylab = 'Tree Canopy Cover (%)', # more attractive label
+            xlab = '\n Metropolitan Statistical Area | Urbanicity',
+            legend = '') +
+  stat_compare_means(comparisons = list(c('Urban', 'Suburban'),
+                                        c('Suburban', 'Exurban'),
+                                        c('Urban', 'Exurban')),
+                     label = 'p.signif') 
+
+#SW updated boxplot with stats plots DV against Affluence
+df %>%
+  mutate(Affluence_fct = 
+           recode_factor(Affluence,
+                         `1` = 'High', `2` = 'Middle', `3` = 'Low',
+                         .ordered = TRUE)) %>%
+  ggboxplot('Affluence_fct', 'Perc_Tree',
+            facet.by = 'MSA',
+            ylim = c(0, 120),
+            fill = 'Affluence_fct',
+            palette = 'Set1',
+            ylab = 'Tree Canopy Cover (%)', # more attractive label
+            xlab = '\n Metropolitan Statistical Area | Soc. Economic Status',
+            legend = '') +
+  stat_compare_means(comparisons = list(c('High', 'Middle'),
+                                        c('Middle', 'Low'),
+                                        c('High', 'Low')),
+                     label = 'p.signif')
             
 
 
