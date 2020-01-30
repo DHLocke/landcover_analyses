@@ -898,7 +898,7 @@ df$Terrain_Roughness       <- scale(df$SDE_STD, center = T) # WOW, the changed n
 # TODO make a summary table of funcational forms / transformations
 # TODO update normality and Combined effect
 
-# TODO change Non-white to Percent White and flip the sign
+# TODO change Non-white to Percent White and flip the sign #done
 
 # TODO add Population Density "POPD_SQKM" into the continuous analyses
 # TODO experiment with square (and quantiles?) for income and Housing Age
