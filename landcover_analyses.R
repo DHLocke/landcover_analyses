@@ -789,16 +789,17 @@ df %>%
                          .ordered = TRUE)) %>%
   ggboxplot('Urbanicity_fct', 'Perc_Tree',
             facet.by = 'MSA',
-            ylim = c(0, 120),
+            ylim = (c(0, 100)),
             fill = 'Urbanicity_fct',
             palette = 'Set1',
+            orientation = 'horizontal',
             ylab = 'Tree Canopy Cover (%)', # more attractive label
             xlab = '\n Metropolitan Statistical Area | Urbanicity',
             legend = '') +
   stat_compare_means(comparisons = list(c('Urban', 'Suburban'),
                                         c('Suburban', 'Exurban'),
                                         c('Urban', 'Exurban')),
-                     label = 'p.signif')
+                     label = 'p.signif', label.y = c(94, 94, 100))
 # hey, SW you can play with manualy setting bracket location ex # label.y = c(95, 90, 85)) 
 # hey, SW you can rotate by adding "orientation = 'horizontal'" within the ggboxplot call
 
@@ -810,7 +811,7 @@ df %>%
                          .ordered = TRUE)) %>%
   ggboxplot('Affluence_fct', 'Perc_Tree',
             facet.by = 'MSA',
-            ylim = c(0, 120),
+            ylim = c(0, 100),
             fill = 'Affluence_fct',
             palette = 'Set1',
             ylab = 'Tree Canopy Cover (%)', # more attractive label
@@ -819,7 +820,7 @@ df %>%
   stat_compare_means(comparisons = list(c('High', 'Middle'),
                                         c('Middle', 'Low'),
                                         c('High', 'Low')),
-                     label = 'p.signif')
+                     label = 'p.signif', label.y = c(94, 94, 100))
             
 
 
