@@ -898,6 +898,11 @@ df %>% ggdensity(x = 'MPA_G', add = 'mean', rug = TRUE,
                  color = 'MSA', fill = 'MSA',
                  alpha = .15) + scale_x_log10()
 
+# PAratio_T is a nightmare, lols
+df %>% gghistogram(x = 'PAratio_T', add = 'mean', rug = TRUE, 
+                   color = 'MSA', fill = 'MSA', binwidth = 0.01,
+                   alpha = .15) + scale_x_log10()
+
 # the others are ratios..?
 # https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#model-extensions
 
@@ -909,11 +914,13 @@ df %>% ggdensity(x = 'MPA_G', add = 'mean', rug = TRUE,
 ### guinis H, Gottfredson RK, Culpepper SA (2013) Best-Practice Recommendations for Estimating Cross-Level Interaction Effects Using Multilevel Modeling. J Manage 39(6):1490–1528.
 df$Population_Density      <- scale(df$POPD_SQKM, center = T)
 df$Median_Household_Income <- scale(df$INC_MED_HS, center = T)
+df$Median_Household_Income_2<- scale(df$INC_MED_HS*df$INC_MED_HS, center = T) # convert to 1000s
 #df$`Percent_non-White`           <- scale(I(100 - df$P_White), center = T) # so this didn't really work out. :-/
 df$Percent_White           <- scale(df$P_White, center = T) # so this didn't really work out. :-/ DHL update: you just had wrong variable name its "P_White"
 df$Percent_Hispanic        <- scale(df$P_Hisp, center = T)
 df$Percent_Own_House       <- scale(df$P_Own, center = T)
 df$Housing_Age             <- scale(df$HOUS_AGE, center = T)
+df$Housing_Age_2           <- scale(df$HOUS_AGE*df$HOUS_AGE, center = T)
 df$Terrain_Roughness       <- scale(df$SDE_STD, center = T) # WOW, the changed names print great in plot_model, I didn't know
                                                             # that plot_mod() changes "_" to " "
 
@@ -944,6 +951,21 @@ mod <- lme4::lmer(Perc_Tree ~ Population_Density + # fixed effects
 
 plot_model(mod, type = 'diag') # diagnostics
 result <- check_distribution(mod); result
+
+
+mod <- lme4::lmer(Perc_Tree ~ Population_Density + # fixed effects
+                    Percent_Own_House +
+                    Housing_Age + 
+                    Housing_Age_2 + 
+                    Median_Household_Income +
+                    #I(Median_Household_Income)^2 +
+                    Percent_White +
+                    Percent_Hispanic + 
+                    Terrain_Roughness +
+                    (1 | MSA),                               # random effects
+                  data = df)
+
+
 
 # I think we can live with this model. 
 # graph it
