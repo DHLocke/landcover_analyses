@@ -913,12 +913,13 @@ df %>% gghistogram(x = 'PAratio_T', add = 'mean', rug = TRUE,
 ### See this paper which addresses scalling
 ### guinis H, Gottfredson RK, Culpepper SA (2013) Best-Practice Recommendations for Estimating Cross-Level Interaction Effects Using Multilevel Modeling. J Manage 39(6):1490–1528.
 df$Population_Density      <- scale(df$POPD_SQKM, center = T)
-df$Median_Household_Income <- scale(df$INC_MED_HS, center = T)
-df$Median_Household_Income_2<- scale(df$INC_MED_HS*df$INC_MED_HS, center = T) # convert to 1000s
+df$Median_Household_Income <- scale((df$INC_MED_HS / 1000), center = T)
+df$Median_Household_Income_2<- scale((df$INC_MED_HS / 1000) * (df$INC_MED_HS / 1000), center = T) # convert to 1000s
 #df$`Percent_non-White`           <- scale(I(100 - df$P_White), center = T) # so this didn't really work out. :-/
 df$Percent_White           <- scale(df$P_White, center = T) # so this didn't really work out. :-/ DHL update: you just had wrong variable name its "P_White"
 df$Percent_Hispanic        <- scale(df$P_Hisp, center = T)
-df$Percent_Own_House       <- scale(df$P_Own, center = T)
+df$Percent_Own             <- scale(df$P_Own, center = T)
+df$Percent_Own_2           <- scale(df$P_Own*df$P_Own, center = T)
 df$Housing_Age             <- scale(df$HOUS_AGE, center = T)
 df$Housing_Age_2           <- scale(df$HOUS_AGE*df$HOUS_AGE, center = T)
 df$Terrain_Roughness       <- scale(df$SDE_STD, center = T) # WOW, the changed names print great in plot_model, I didn't know
@@ -937,34 +938,58 @@ font_sz <- 5 # font size
 fig_w   <- 6.5
 fig_h   <- 2.5
 fig_u   <- 'in'
+# 
+# # can you fit glm to lm data?
+# # make data
+# n <- 5100                                      # length of data frame, approx our real data
+# fake <- tibble(dv = abs(rnorm(n = n,               # 5100 / 6 = 850
+#                               mean = 25,       # tree canopy has a mean ~25
+#                               sd = 15)),        # tree canopy has a sd ~19
+#                iv_1 = dv + rnorm(n, 40, 20),
+#                iv_2 = dv + 1.5*rnorm(n, 75, 20),   # very similar to percent owner occupied
+#                iv_3 = dv*-1 + rnorm(n, 35, 10),
+#                iv_4_inc = dv + rnorm(n = n, mean = 60, sd = 24), # like income.. 
+#                iv_5_inc_2 = dv - iv_4_inc*iv_4_inc,             # income squared
+#                MSA = as.factor(rep(LETTERS[1:6], 850))) %>% 
+#   arrange(MSA) # just to make it pretty
+#                
+# fake
+# psych::pairs.panels(fake)
+# 
+# fake_lm <- lm(dv ~ iv_1 + iv_2 + iv_3 + iv_4_inc + iv_5_inc_2, data = fake)
+# 
+# plot_model(fake_lm)
+# tab_model(fake_lm)
+# 
+# fake_glm_a <- glm(dv ~ iv_1 + iv_2 + iv_3 + iv_4_inc + iv_5_inc_2, data = fake,
+#                 family = gaussian) # is normal
+# 
+# fake_glm_b <- glm(as.integer(dv) ~ iv_1 + iv_2 + iv_3 + iv_4_inc + iv_5_inc_2, data = fake,
+#                 family = poisson()) # is normal
+# 
+# #plot_model(fake_glm)
+# tab_model(fake_lm, fake_glm_a, fake_glm_b)
+# tab_model(fake_glm_b, transform = 'exp')
+# 
+
 
 # 5.1.1. Perc_Tree first dependent variable:---- 
-mod <- lme4::lmer(Perc_Tree ~ Population_Density + # fixed effects
-                  Median_Household_Income +
+mod <- lme4::lmer(Perc_Tree ~
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    Percent_Own_2 + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income + 
+                    Median_Household_Income_2 + 
                     Percent_White +
                     Percent_Hispanic + 
-                    Percent_Own_House +
-                    Housing_Age + 
                     Terrain_Roughness +
                     (1 | MSA),                               # random effects
                   data = df)
 
 plot_model(mod, type = 'diag') # diagnostics
 result <- check_distribution(mod); result
-
-
-mod <- lme4::lmer(Perc_Tree ~ Population_Density + # fixed effects
-                    Percent_Own_House +
-                    Housing_Age + 
-                    Housing_Age_2 + 
-                    Median_Household_Income +
-                    #I(Median_Household_Income)^2 +
-                    Percent_White +
-                    Percent_Hispanic + 
-                    Terrain_Roughness +
-                    (1 | MSA),                               # random effects
-                  data = df)
-
 
 
 # I think we can live with this model. 
@@ -1034,12 +1059,16 @@ tab_model(mod,
 
 
 # 5.1.2. Perc_Grass second dependent variable:---- 
-mod <- lme4::lmer(Perc_Grass ~ Population_Density + # fixed effects
-                    Median_Household_Income +
+mod <- lme4::lmer(Perc_Grass ~
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    #Percent_Own_2 + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income + 
+                    Median_Household_Income_2 + 
                     Percent_White +
                     Percent_Hispanic + 
-                    Percent_Own_House +
-                    Housing_Age + 
                     Terrain_Roughness +
                     (1 | MSA),                               # random effects
                   data = df)
@@ -1050,24 +1079,52 @@ result <- check_distribution(mod); result
 # lets try gamma, but gamma can't take zeros.
 df %>% filter(Perc_Grass > 0) -> df_grass # 18 rows cut, less 1%
 
+
+mod_1 <- lme4::lmer(Perc_Grass ~ 
+                      Population_Density + # fixed effects
+                      Percent_Own + 
+                      #Percent_Own_2 + 
+                      Housing_Age + 
+                      Housing_Age_2 +
+                      Median_Household_Income + 
+                      Median_Household_Income_2 + 
+                      Percent_White +
+                      Percent_Hispanic + 
+                      Terrain_Roughness +
+                      (1 | MSA),                               # random effects
+                    data = df_grass)
+
 # note that data has changed and "lmer" is now "glmer", and the family argument
-mod <- lme4::glmer(Perc_Grass ~ Population_Density + # fixed effects
-                    Median_Household_Income +
-                    Percent_White +
-                    Percent_Hispanic + 
-                    Percent_Own_House +
-                    Housing_Age + 
-                    Terrain_Roughness +
+mod_2 <- lme4::glmer(Perc_Grass ~ 
+                       Population_Density + # fixed effects
+                       Percent_Own + 
+                       #Percent_Own_2 + 
+                       Housing_Age + 
+                       Housing_Age_2 +
+                       Median_Household_Income + 
+                       Median_Household_Income_2 + 
+                       Percent_White +
+                       Percent_Hispanic + 
+                       Terrain_Roughness +
                     (1 | MSA),                               # random effects
                    data = df_grass, 
                    family=Gamma(link="log")) # family of glm
+
+tab_model(mod_1, mod_2)
+result <- check_distribution(mod_1); result
+result <- check_distribution(mod_2); result
+tab_model(mod_1, mod_2, transform = NULL)
+tab_model(mod_1)
+tab_model(mod_2)
+
+plot_model(mod_1); plot_model(mod_2)
 
 plot_model(mod, type = 'diag') # diagnostics
 result <- check_distribution(mod); result
 # I think we can live with this model. 
 
 # graph it
-p_fe <- plot_model(mod,                                 # save the model in "p_fe", short for Plot Fixed Effects
+p_fe <- plot_model(mod_2,                                 # save the model in "p_fe", short for Plot Fixed Effects
                    type = 'est',                                    # more explcit that accepting the defaults
                    show.values = TRUE,
                    show.p = TRUE,
@@ -1081,7 +1138,7 @@ p_fe <- plot_model(mod,                                 # save the model in "p_f
 p_fe # peak at the graph
 
 # random effects graph
-p_re <- plot_model(mod,                                     # save the model in "p_re", short for Plot RANDOM Effects
+p_re <- plot_model(mod_2,                                     # save the model in "p_re", short for Plot RANDOM Effects
                    type = 're',                                    # more explcit that accepting the defaults
                    show.values = TRUE,
                    value.offset = .3,
