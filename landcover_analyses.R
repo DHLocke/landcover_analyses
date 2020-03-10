@@ -39,23 +39,8 @@ if (length(setdiff(packages, rownames(installed.packages()))) > 0) {
   install.packages(setdiff(packages, rownames(installed.packages())))  
 }
 
-
-# load some useful libraries
-library(tidyverse)      # this is actually a collection of packages
-library(sf)             # used for reading shapefiles
-                        # lots of other great spatial functions, too, but we wont use them
-library(sjPlot)         # nice graphs and tables supporting many models
-library(lme4)           # fits multi-level models
-library(ggpubr)         # mixes base stats functions with ggplot graphics, its great!
-library(RColorBrewer)   # good for colors
-library(cowplot)        # for multi-paned graphs NOTE THAT THIS MASKS ggplot2::ggsave()!!
-library(janitor)        # cleans things up
-#library(multcompView)    # supports significance letters for multiple comparisons, helpful formattings
-library(psych)          # useful data summaries
-library(see)            # model diagnostics
-library(performance)    # model diagnostics
-library(tidylog)
-library(glmmTMB)
+# load them all at once
+lapply(packages, library, character.only = TRUE)
 
 # read in the data
 # you will have to change the file path to match the location of the data
@@ -903,6 +888,11 @@ df %>% gghistogram(x = 'PAratio_T', add = 'mean', rug = TRUE,
                    color = 'MSA', fill = 'MSA', binwidth = 0.01,
                    alpha = .15) + scale_x_log10()
 
+# CV_T is a nightmare, lols
+df %>% gghistogram(x = 'CV_T', add = 'mean', rug = TRUE, 
+                   color = 'MSA', fill = 'MSA', binwidth = 0.01,
+                   alpha = .15) + scale_x_log10()
+
 # the others are ratios..?
 # https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#model-extensions
 
@@ -972,8 +962,17 @@ fig_u   <- 'in'
 # tab_model(fake_glm_b, transform = 'exp')
 # 
 
+# Based on Rinku and Sam's Feb 28 "Continuous model variable summary.xlsx" spreadsheet, we focus on these main models:
+
+# Model1main. % Tree
+# Model2main. #Tree Patches
+# Model3main. Tree MPA
+# Model4main. CV Mean Tree Patch size
+# Model5main. Tree P/A ratio
+# Model6main. % Grass
 
 # 5.1.1. Perc_Tree first dependent variable:---- 
+# Model1main. % Tree----
 mod <- lme4::lmer(Perc_Tree ~
                     Population_Density + # fixed effects
                     Percent_Own + 
@@ -991,24 +990,29 @@ mod <- lme4::lmer(Perc_Tree ~
 plot_model(mod, type = 'diag') # diagnostics
 result <- check_distribution(mod); result
 
+# Model1main. % Tree
+# lets keep this model
+mod_1_main <- mod
 
 # I think we can live with this model. 
 # graph it
-p_fe <- plot_model(mod,                                 # save the model in "p_fe", short for Plot Fixed Effects
-                   type = 'est',                                    # more explcit that accepting the defaults
+p_fe <- plot_model(mod_1_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                # more explcit that accepting the defaults
                    show.values = TRUE,
                    show.p = TRUE,
                    value.offset = .3,
                    title = 'Tree Canopy Cover (%):\nfixed effects', # "\n" means "new line"
                    #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
-                   vline.color = 'black') + #,                      # adds the zero line back in that theme_bw() takes out
+                   vline.color = 'black') + #                        # adds the zero line back in that theme_bw() takes out
                    #axis.lim = c(.25, 1.25)) +             may want to standardize x axis            
   theme_bw()                                                     # number pertains to font size
 
+
 p_fe # peak at the graph
+# FIXME the order of the fixed effects so tehy are consistent across models see help(plot_model) and order.terms / terms/ related..
 
 # random effects graph
-p_re <- plot_model(mod,                                     # save the model in "p_re", short for Plot RANDOM Effects
+p_re <- plot_model(mod_1_main,                                     # save the model in "p_re", short for Plot RANDOM Effects
                    type = 're',                                    # more explcit that accepting the defaults
                    show.values = TRUE,
                    value.offset = .3,
@@ -1037,6 +1041,8 @@ ggplot2::ggsave(plot = p_tree_graph,  # the graph we just made with plot_grid()
                                        # the saved version will look like
                 units = fig_u)
 
+
+
 # TODO consider combining tables into one
 tab_model(mod,
           ci.hyphen = ' to ',
@@ -1059,6 +1065,8 @@ tab_model(mod,
 
 
 # 5.1.2. Perc_Grass second dependent variable:---- 
+# Model6main. % Grass----
+
 mod <- lme4::lmer(Perc_Grass ~
                     Population_Density + # fixed effects
                     Percent_Own + 
@@ -1079,23 +1087,8 @@ result <- check_distribution(mod); result
 # lets try gamma, but gamma can't take zeros.
 df %>% filter(Perc_Grass > 0) -> df_grass # 18 rows cut, less 1%
 
-
-mod_1 <- lme4::lmer(Perc_Grass ~ 
-                      Population_Density + # fixed effects
-                      Percent_Own + 
-                      #Percent_Own_2 + 
-                      Housing_Age + 
-                      Housing_Age_2 +
-                      Median_Household_Income + 
-                      Median_Household_Income_2 + 
-                      Percent_White +
-                      Percent_Hispanic + 
-                      Terrain_Roughness +
-                      (1 | MSA),                               # random effects
-                    data = df_grass)
-
 # note that data has changed and "lmer" is now "glmer", and the family argument
-mod_2 <- lme4::glmer(Perc_Grass ~ 
+mod <- lme4::glmer(Perc_Grass ~ 
                        Population_Density + # fixed effects
                        Percent_Own + 
                        #Percent_Own_2 + 
@@ -1110,21 +1103,25 @@ mod_2 <- lme4::glmer(Perc_Grass ~
                    data = df_grass, 
                    family=Gamma(link="log")) # family of glm
 
-tab_model(mod_1, mod_2)
-result <- check_distribution(mod_1); result
-result <- check_distribution(mod_2); result
-tab_model(mod_1, mod_2, transform = NULL)
-tab_model(mod_1)
-tab_model(mod_2)
-
-plot_model(mod_1); plot_model(mod_2)
-
-plot_model(mod, type = 'diag') # diagnostics
 result <- check_distribution(mod); result
+
+# tab_model(mod_1, mod_2)
+# result <- check_distribution(mod_1); result
+# result <- check_distribution(mod_2); result
+# tab_model(mod_1, mod_2, transform = NULL)
+# tab_model(mod_1)
+# tab_model(mod_2)
+
+#plot_model(mod)
+
+# plot_model(mod, type = 'diag') # diagnostics
+# result <- check_distribution(mod); result
 # I think we can live with this model. 
+mod_6_main <- mod
+
 
 # graph it
-p_fe <- plot_model(mod_2,                                 # save the model in "p_fe", short for Plot Fixed Effects
+p_fe <- plot_model(mod_6_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
                    type = 'est',                                    # more explcit that accepting the defaults
                    show.values = TRUE,
                    show.p = TRUE,
@@ -1138,11 +1135,11 @@ p_fe <- plot_model(mod_2,                                 # save the model in "p
 p_fe # peak at the graph
 
 # random effects graph
-p_re <- plot_model(mod_2,                                     # save the model in "p_re", short for Plot RANDOM Effects
+p_re <- plot_model(mod_6_main,                                     # save the model in "p_re", short for Plot RANDOM Effects
                    type = 're',                                    # more explcit that accepting the defaults
                    show.values = TRUE,
                    value.offset = .3,
-                   title = 'Grass Cover (%):\nrandom effects',# "\n" means "new line"
+                   title = 'Grass Cover (%):\nrandom effects with Gamma distriubtion',# "\n" means "new line"
                    #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
                    vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
   theme_bw()
@@ -1168,13 +1165,13 @@ ggplot2::ggsave(plot = p_grass_graph,  # the graph we just made with plot_grid()
                 units = fig_u)
 
 # TODO: consider combining several tables into one
-tab_model(mod,
+tab_model(mod_6_main,
           ci.hyphen = ' to ',
           show.ngroups = TRUE,
           dv.labels= '% Grass Cover') 
 
 # lets write out the table
-tab_model(mod,
+tab_model(mod_6_main,
           ci.hyphen = ' to ',
           show.ngroups = TRUE,
           dv.labels = '% Grass Cover',
@@ -1184,19 +1181,25 @@ tab_model(mod,
 
 
 
+
 # Perc_Other     # % other area   - dont care
 # Perc_Water     # % water area   - dont care
 
 
 # 5.1.3 Number of Tree Patches----
+# Model2main. #Tree Patches----
 # NP_T          
 # Number of Patches Tree (distinct tree patches, group of pixels)
-mod <- lme4::lmer(NP_T ~ Population_Density + # fixed effects
+mod <- lme4::lmer(NP_T ~ 
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    Housing_Age + 
+                    Housing_Age_2 +
                     Median_Household_Income +
+                    Median_Household_Income_2 +
                     Percent_White +
                     Percent_Hispanic + 
-                    Percent_Own_House +
-                    Housing_Age + 
+                    Percent_Own +
                     Terrain_Roughness +
                     (1 | MSA),                               # random effects
                   data = df)
@@ -1204,18 +1207,23 @@ mod <- lme4::lmer(NP_T ~ Population_Density + # fixed effects
 plot_model(mod, type = 'diag') # diagnostics YEah - HARD NO
 result <- check_distribution(mod); result # suggests log normal
 
+
 # taking the log requires no zeros, so lets look for those first
 df %>% filter(NP_T > 0) %>% 
   mutate(log_NP_T = log(NP_T)) -> df_NP_T # 22 rows, less than 1%
 
 hist(df_NP_T$log_NP_T) # pretty
 
-mod <- lme4::lmer(log_NP_T ~ Population_Density + # fixed effects
+mod <- lme4::lmer(log_NP_T ~ 
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    Housing_Age + 
+                    Housing_Age_2 +
                     Median_Household_Income +
+                    Median_Household_Income_2 +
                     Percent_White +
                     Percent_Hispanic + 
-                    Percent_Own_House +
-                    Housing_Age + 
+                    Percent_Own +
                     Terrain_Roughness +
                     (1 | MSA),                               # random effects
                   data = df_NP_T)
@@ -1223,9 +1231,13 @@ mod <- lme4::lmer(log_NP_T ~ Population_Density + # fixed effects
 plot_model(mod, type = 'diag') # diagnostics YEah - HARD NO
 result <- check_distribution(mod); result # suggests log normal
 
+# Model2main. #Tree Patches
+# lets keep this model
+mod_2_main <- mod
+
 # I think we can live with this model. 
 # graph it
-p_fe <- plot_model(mod,                                 # save the model in "p_fe", short for Plot Fixed Effects
+p_fe <- plot_model(mod_2_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
                    type = 'est',                                    # more explcit that accepting the defaults
                    show.values = TRUE,
                    show.p = TRUE,
@@ -1239,7 +1251,7 @@ p_fe <- plot_model(mod,                                 # save the model in "p_f
 p_fe # peak at the graph
 
 # random effects graph
-p_re <- plot_model(mod,                                     # save the model in "p_re", short for Plot RANDOM Effects
+p_re <- plot_model(mod_2_main,                                     # save the model in "p_re", short for Plot RANDOM Effects
                    type = 're',                                    # more explcit that accepting the defaults
                    show.values = TRUE,
                    value.offset = .3,
@@ -1269,13 +1281,13 @@ ggplot2::ggsave(plot = log_NP_T_graph,  # the graph we just made with plot_grid(
                 units = fig_u)
 
 # TODO consider combining tables into one
-tab_model(mod,
+tab_model(mod_2_main,
           ci.hyphen = ' to ',
           show.ngroups = TRUE,
           dv.labels= 'Log Number of Patches of Tree Canopy') 
 
 # lets write out the table
-tab_model(mod,
+tab_model(mod_2_main,
           ci.hyphen = ' to ',
           show.ngroups = TRUE,
           dv.labels = 'Log Number of Patches of Tree Canopy',
@@ -1286,14 +1298,19 @@ tab_model(mod,
 
 
 
-# 5.1.4---- Mean Patch Area: TREES
+# 5.1.4 Mean Patch Area: TREES----
+# Model3main. Tree MPA----
 # MPA_T          # Mean Patch Area Tree (the average size of tree patches)
-mod <- lme4::lmer(MPA_T ~ Population_Density + # fixed effects
-                    Median_Household_Income +
+mod <- lme4::lmer(MPA_T ~ 
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    #Percent_Own_2 + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income + 
+                    Median_Household_Income_2 + 
                     Percent_White +
                     Percent_Hispanic + 
-                    Percent_Own_House +
-                    Housing_Age + 
                     Terrain_Roughness +
                     (1 | MSA),                               # random effects
                   data = df)
@@ -1304,31 +1321,71 @@ result <- check_distribution(mod); result # VERY BAD
 hist(df$MPA_T)
 hist(log(df$MPA_T + 0.01)) # better!
 
-df %>% filter(MPA_T > 0) %>% 
-  mutate(log_MPA_T = log(MPA_T)) -> df_MPA_T # just 22 rows (<1%) dropped
+df %>% filter(MPA_T > 0) -> df_MPA_T # just 22 rows (<1%) dropped
 
+df_MPA_T %>% filter(MSA == 'PHX') -> df_MPA_T_PHX  # PHOENIX data
+df_MPA_T %<>% filter(MSA != 'PHX')                 # all other data
 
-mod <- lme4::lmer(log_MPA_T ~ Population_Density + # fixed effects
-                    Median_Household_Income +
-                    Percent_White +
-                    Percent_Hispanic + 
-                    Percent_Own_House +
-                    Housing_Age + 
-                    Terrain_Roughness +
-                    (1 | MSA),                               # random effects
-                  data = df_MPA_T) # NOTE the differnt data frame
+hist(df_MPA_T$MPA_T, breaks = 100)  #DID NOT LOG, I THINK THIS IS OK - DHL
+hist(df_MPA_T_PHX$MPA_T, breaks = 100)
+
+mod <- lme4::glmer(MPA_T ~ 
+                     Population_Density + # fixed effects
+                     Percent_Own + 
+                     #Percent_Own_2 + 
+                     Housing_Age + 
+                     Housing_Age_2 +
+                     Median_Household_Income + 
+                     Median_Household_Income_2 + 
+                     Percent_White +
+                     Percent_Hispanic + 
+                     Terrain_Roughness +
+                       (1 | MSA),                               # random effects
+                     data = df_MPA_T, 
+                     family=Gamma(link="log")) # family of glm
 
 plot_model(mod, type = 'diag') # diagnostics
 result <- check_distribution(mod); result # VERY BAD
 # I think we can live with this model. 
 
+# # Model3main. Tree MPA
+# lets keep this model
+mod_3_main <- mod
+
+
+mod.phx <- glm(MPA_T ~ # note this is NOT a mixed model
+                     Population_Density + # fixed effects
+                     Percent_Own + 
+                     #Percent_Own_2 + 
+                     Housing_Age + 
+                     Housing_Age_2 +
+                     Median_Household_Income + 
+                     Median_Household_Income_2 + 
+                     Percent_White +
+                     Percent_Hispanic + 
+                     Terrain_Roughness, # +
+                     #(1 | MSA),                               # random effects TURNED OFF
+                   data = df_MPA_T_PHX, 
+                   family=Gamma(link="log")) # family of glm
+
+# TODO figure out why this doesn't work
+plot_model(mod.phx, type = 'diag') # diagnostics 
+result <- check_distribution(mod.phx); result # VERY BAD
+# I think we can live with this model. 
+
+# # Model3main. Tree MPA
+# lets keep this model
+mod_3b_main <- mod.phx
+
+
+
 # graph it
-p_fe <- plot_model(mod,                                 # save the model in "p_fe", short for Plot Fixed Effects
+p_fe <- plot_model(mod_3_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
                    type = 'est',                                    # more explcit that accepting the defaults
                    show.values = TRUE,
                    show.p = TRUE,
                    value.offset = .3,
-                   title = 'Log of Mean Patch Areas (Tree):\nfixed effects', # "\n" means "new line"
+                   title = 'Mean Patch Areas (Tree):\nfixed effects', # "\n" means "new line"
                    #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
                    vline.color = 'black') + #,                      # adds the zero line back in that theme_bw() takes out
   #axis.lim = c(.25, 1.25)) +             may want to standardize x axis            
@@ -1336,12 +1393,146 @@ p_fe <- plot_model(mod,                                 # save the model in "p_f
 
 p_fe # peak at the graph
 
+
 # random effects graph
-p_re <- plot_model(mod,                                     # save the model in "p_re", short for Plot RANDOM Effects
+p_re <- plot_model(mod_3_main,                                     # save the model in "p_re", short for Plot RANDOM Effects
                    type = 're',                                    # more explcit that accepting the defaults
                    show.values = TRUE,
                    value.offset = .3,
-                   title = 'Log of Mean Patch Area (Tree):\nrandom effects',# "\n" means "new line"
+                   title = 'Mean Patch Areas (Tree):\nrandom effects',# "\n" means "new line"
+                   #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw()
+
+p_fe # peak at the graph
+
+
+# combine the two graphs into one two-pane graph
+mean_patch_area_Trees_graph <- plot_grid(p_fe, # fixed effects
+                            p_re, # random effects
+                            labels = c('A', 'B'))
+# looks great!
+mean_patch_area_Trees_graph
+
+# save this out
+ggplot2::ggsave(plot = mean_patch_area_Trees_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/mean_patch_area_Trees_graph',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # this is  as wide as a normal Word Doc page
+                height = fig_h, # I had to play with this A LOT to get this to look right
+                # the Plots tab in RStudio is not representative of what the
+                # the saved version will look like
+                units = fig_u)
+
+# graph it
+p_fe <- plot_model(mod_3b_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   show.p = TRUE,
+                   value.offset = .3,
+                   title = 'Mean Patch Areas (Tree):\nfixed effects PHOENIX ONLY', # "\n" means "new line"
+                   #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') + #,                      # adds the zero line back in that theme_bw() takes out
+  #axis.lim = c(.25, 1.25)) +             may want to standardize x axis            
+  theme_bw()                                                     # number pertains to font size
+
+p_fe # peak at the graph
+
+ggplot2::ggsave(plot = p_fe,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/mean_patch_area_Trees_graph_Phoenix_only',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # this is  as wide as a normal Word Doc page
+                height = fig_h, # I had to play with this A LOT to get this to look right
+                # the Plots tab in RStudio is not representative of what the
+                # the saved version will look like
+                units = fig_u)
+
+
+tab_model(mod_3_main, mod_3b_main)
+
+# lets write out the table
+tab_model(mod_3_main, mod_3b_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels = c('Mean Patch Area of Tree Canopy', 'Mean Patch Area of Tree Canopy: Phoenix only'),
+          file = paste0(getwd(), '/tables/model_fits/log_MPA_T_',               # see how this is now "tables"
+                        gsub('[[:punct:]]', '_', Sys.time()), '.html'))  # ".png" changed to ".html",
+# should open nicely in web browser
+
+
+# CV_T           #Coefficient of Variation for tree patches----
+# Model4main. CV Mean Tree Patch size---- 
+mod <- lme4::lmer(CV_T ~ 
+                    Population_Density + # fixed effects
+                    I(Population_Density*Population_Density) +
+                    Percent_Own + 
+                    Percent_Own_2 + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income + 
+                    Median_Household_Income_2 + 
+                    Percent_White +
+                    Percent_Hispanic + 
+                    Terrain_Roughness +
+                    (1 | MSA),                               # random effects
+                  data = df)
+
+plot_model(mod, type = 'diag') # diagnostics DEFINATELY NO
+result <- check_distribution(mod); result
+
+hist(log(df$CV_T))
+
+df %>% filter(CV_T > 0) -> df_CV_T
+
+hist(log(df_CV_T$CV_T))
+
+mod <- lme4::lmer(log(CV_T) ~ 
+                    Population_Density + # fixed effects
+                    I(Population_Density*Population_Density) +
+                    Percent_Own + 
+                    Percent_Own_2 + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income + 
+                    Median_Household_Income_2 + 
+                    Percent_White +
+                    Percent_Hispanic + 
+                    Terrain_Roughness +
+                    (1 | MSA),                               # random effects
+                  data = df_CV_T)
+
+plot_model(mod, type = 'diag') # diagnostics DEFINATELY NO
+result <- check_distribution(mod); result
+
+
+
+# Model4main CV Tree Area
+# lets keep this model
+mod_4_main <- mod
+
+# I think we can live with this model. 
+# graph it
+p_fe <- plot_model(mod_4_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   show.p = TRUE,
+                   value.offset = .3,
+                   title = 'Coef. of Variation of Tree Canopy Cover:\nfixed effects', # "\n" means "new line"
+                   #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') + #                        # adds the zero line back in that theme_bw() takes out
+  #axis.lim = c(.25, 1.25)) +             may want to standardize x axis            
+  theme_bw()                                                     # number pertains to font size
+
+
+p_fe # peak at the graph
+# FIXME the order of the fixed effects so tehy are consistent across models see help(plot_model) and order.terms / terms/ related..
+
+# random effects graph
+p_re <- plot_model(mod_4_main,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   value.offset = .3,
+                   title = 'Coef. of Variation of Tree Canopy Cover::\nrandom effects',# "\n" means "new line"
                    #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
                    vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
   theme_bw()
@@ -1349,16 +1540,17 @@ p_re <- plot_model(mod,                                     # save the model in 
 # peak at the graph
 p_re
 
+
 # combine the two graphs into one two-pane graph
-log_MPA_T_graph <- plot_grid(p_fe, # fixed effects
+cv_tree_graph <- plot_grid(p_fe, # fixed effects
                           p_re, # random effects
                           labels = c('A', 'B'))
 # looks great!
-log_MPA_T_graph
+cv_tree_graph
 
 # save this out
-ggplot2::ggsave(plot = log_MPA_T_graph,  # the graph we just made with plot_grid()
-                filename = paste0(getwd(), '/graphs/log_MPA_T_mixed_effects_',
+ggplot2::ggsave(plot = cv_tree_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/cv_tree_cover_mixed_effects_',
                                   gsub('[[:punct:]]', '_', Sys.time()), '.png'),
                 width  = fig_w, # this is  as wide as a normal Word Doc page
                 height = fig_h, # I had to play with this A LOT to get this to look right
@@ -1367,31 +1559,36 @@ ggplot2::ggsave(plot = log_MPA_T_graph,  # the graph we just made with plot_grid
                 units = fig_u)
 
 # TODO consider combining tables into one
-tab_model(mod,
+tab_model(mod_4_main,
           ci.hyphen = ' to ',
           show.ngroups = TRUE,
-          dv.labels= 'Log of Mean Patch Area of Tree Canopy') 
+          dv.labels= 'CV Tree Canopy Cover') 
 
 # lets write out the table
-tab_model(mod,
+tab_model(mod_4_main,
           ci.hyphen = ' to ',
           show.ngroups = TRUE,
-          dv.labels = 'Log of Mean Patch Area of Tree Canopy',
-          file = paste0(getwd(), '/tables/model_fits/log_MPA_T_',               # see how this is now "tables"
+          dv.labels = 'CV Tree Canopy Cover',
+          file = paste0(getwd(), '/tables/model_fits/CV_tree_canopy_',               # see how this is now "tables"
                         gsub('[[:punct:]]', '_', Sys.time()), '.html'))  # ".png" changed to ".html",
 # should open nicely in web browser
 
 
-# CV_T           #Coefficient of Variation for tree patches - too many DVs
 
-## 5.1.4. Perimeter Area Ratio for tree canopy----
-# PAratio_T      # Parimieter Area ratio for tree canopy
-mod <- lme4::lmer(PAratio_T ~ Population_Density + # fixed effects
-                    Median_Household_Income +
+
+## 5.1.4. Perimeter Area Ratio for tree canopy---- 
+# Model5main. Tree P/A ratio----
+# PAratio_T      # Parimieter Area ratio for tree canopy 
+mod <- lme4::lmer(PAratio_T ~ 
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    # Percent_Own_2 + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income + 
+                    Median_Household_Income_2 + 
                     Percent_White +
                     Percent_Hispanic + 
-                    Percent_Own_House +
-                    Housing_Age + 
                     Terrain_Roughness +
                     (1 | MSA),                               # random effects
                   data = df)
@@ -1403,14 +1600,28 @@ result <- check_distribution(mod); result # maybe lognormal?
 df %>% filter(PAratio_T > 0) %>% 
   mutate(log_PAratio_T = log(PAratio_T)) -> df_PAratio_T # again only dropped a few (20) rows
 
-hist(df_PAratio_T$log_PAratio_T) # eh not so sure yet
+df_PAratio_T %>% filter(MSA == 'PHX') -> df_PAratio_T_PHX  # PHOENIX data
+df_PAratio_T %<>% filter(MSA != 'PHX')                 # all other data
 
-mod <- lme4::lmer(log_PAratio_T ~ Population_Density + # fixed effects
-                    Median_Household_Income +
+df_PAratio_T %>% gghistogram(x = 'log_PAratio_T', add = 'mean', rug = TRUE, 
+                   color = 'MSA', fill = 'MSA', binwidth = 0.01,
+                   alpha = .15) + scale_x_log10()
+
+df_PAratio_T_PHX %>% gghistogram(x = 'log_PAratio_T', add = 'mean', rug = TRUE, 
+                             color = 'MSA', fill = 'MSA', binwidth = 0.01,
+                             alpha = .15) + scale_x_log10()
+
+
+mod <- lme4::lmer(log_PAratio_T ~
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    # Percent_Own_2 + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income + 
+                    Median_Household_Income_2 + 
                     Percent_White +
                     Percent_Hispanic + 
-                    Percent_Own_House +
-                    Housing_Age + 
                     Terrain_Roughness +
                     (1 | MSA),                               # random effects
                   data = df_PAratio_T)
@@ -1418,7 +1629,132 @@ mod <- lme4::lmer(log_PAratio_T ~ Population_Density + # fixed effects
 plot_model(mod, type = 'diag') # diagnostics HOMOSCEDASTICITY plot is really bad
 result <- check_distribution(mod); result # maybe lognormal?
 
-# NOT SURE HOW TO PROCEED with PAratio_T
+
+# Model1main. % Tree
+# lets keep this model
+mod_5_main <- mod
+
+mod <- lm(log_PAratio_T ~ # no longer mixed model
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    # Percent_Own_2 + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income + 
+                    Median_Household_Income_2 + 
+                    Percent_White +
+                    Percent_Hispanic + 
+                    Terrain_Roughness, # +
+                    #(1 | MSA),                               # random effects TURNED OFF
+                  data = df_PAratio_T_PHX)
+
+plot_model(mod, type = 'diag') # diagnostics HOMOSCEDASTICITY plot is really bad
+result <- check_distribution(mod); result # maybe lognormal?
+
+
+# Model1main. % Tree
+# lets keep this model
+mod_5b_main <- mod
+
+
+# I think we can live with this model. 
+# graph it tk
+p_fe <- plot_model(mod_5_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   show.p = TRUE,
+                   value.offset = .3,
+                   title = 'P-A Ratio:\nfixed effects', # "\n" means "new line"
+                   #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') + #                        # adds the zero line back in that theme_bw() takes out
+  #axis.lim = c(.25, 1.25)) +             may want to standardize x axis            
+  theme_bw()                                                     # number pertains to font size
+
+
+p_fe # peak at the graph
+# FIXME the order of the fixed effects so tehy are consistent across models see help(plot_model) and order.terms / terms/ related..
+
+# random effects graph
+p_re <- plot_model(mod_5_main,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   value.offset = .3,
+                   title = 'Tree Canopy Cover (%):\nrandom effects',# "\n" means "new line"
+                   #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw()
+
+# peak at the graph
+p_re
+
+# combine the two graphs into one two-pane graph
+pa_ratio_T_graph <- plot_grid(p_fe, # fixed effects
+                          p_re, # random effects
+                          labels = c('A', 'B'))
+# looks great!
+pa_ratio_T_graph
+
+# save this out
+ggplot2::ggsave(plot = pa_ratio_T_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/pa_ratio_tree_mixed_effects_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # this is  as wide as a normal Word Doc page
+                height = fig_h, # I had to play with this A LOT to get this to look right
+                # the Plots tab in RStudio is not representative of what the
+                # the saved version will look like
+                units = fig_u)
+
+p_fe <- plot_model(mod_5b_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   show.p = TRUE,
+                   value.offset = .3,
+                   title = 'P-A Ratio PHOENIX ONLY:\nfixed effects', # "\n" means "new line"
+                   #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') + #                        # adds the zero line back in that theme_bw() takes out
+  #axis.lim = c(.25, 1.25)) +             may want to standardize x axis            
+  theme_bw()                                                     # number pertains to font size
+
+p_fe
+
+ggplot2::ggsave(plot = p_fe,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/pa_ratio_tree_PHOENIX_ONLY_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # this is  as wide as a normal Word Doc page
+                height = fig_h, # I had to play with this A LOT to get this to look right
+                # the Plots tab in RStudio is not representative of what the
+                # the saved version will look like
+                units = fig_u)
+
+
+# TODO consider combining tables into one
+tab_model(mod_5_main, mod_5b_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= c('PA ratio', 'PA ratio: Phoenix'))
+
+# lets write out the table
+tab_model(mod_5_main, mod_5b_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels = c('PA ratio', 'PA ratio: Phoenix'),
+          file = paste0(getwd(), '/tables/model_fits/pa_ratio_tree_canopy_',               # see how this is now "tables"
+                        gsub('[[:punct:]]', '_', Sys.time()), '.html'))  # ".png" changed to ".html",
+# should open nicely in web browser
+
+
+
+
+
+# lets write out the table
+tab_model(mod_1_main, mod_2_main, mod_3_main, mod_3b_main, mod_4_main, mod_5_main, mod_5b_main, mod_6_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels = '% Grass Cover',
+          file = paste0(getwd(), '/tables/model_fits/allmods_',               # see how this is now "tables"
+                        gsub('[[:punct:]]', '_', Sys.time()), '.html'))  # ".png" changed to ".html",
+# should open nicely in web browser
+
 
 
 # NP_G           # Number of Patches Grass
