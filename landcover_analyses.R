@@ -853,8 +853,8 @@ for(i in seq(start_dv, end_dv)){
   ggplot2::ggsave(plot = plot_grid(p, p_qq),  # the graph we just made with plot_grid()
                   filename = paste0(getwd(), '/graphs/normality_', names(df)[i], '_',
                                     gsub('[[:punct:]]', '_', Sys.time()), '.png'),
-                  width  = 6.5, # this is  as wide as a normal Word Doc page
-                  height = 4.5, # I had to play with this A LOT to get this to look right
+                  width  = fig_w, # this is  as wide as a normal Word Doc page
+                  height = fig_h, # I had to play with this A LOT to get this to look right
                   # the Plots tab in RStudio is not representative of what the
                   # the saved version will look like
                   units = 'in')
@@ -925,8 +925,8 @@ df$Terrain_Roughness       <- scale(df$SDE_STD, center = T) # WOW, the changed n
 
 # I am REALLY lazy!
 font_sz <- 5 # font size
-fig_w   <- 6.5
-fig_h   <- 2.5
+fig_w   <- 11
+fig_h   <- 6
 fig_u   <- 'in'
 # 
 # # can you fit glm to lm data?
@@ -1158,8 +1158,8 @@ p_grass_graph
 ggplot2::ggsave(plot = p_grass_graph,  # the graph we just made with plot_grid()
                 filename = paste0(getwd(), '/graphs/p_grass_mixed_effects_',
                                   gsub('[[:punct:]]', '_', Sys.time()), '.png'),
-                width  = fig_w, # this is  as wide as a normal Word Doc page
-                height = fig_h, # I had to play with this A LOT to get this to look right
+                width  = 11, # this is  as wide as a normal Word Doc page
+                height = 6, # I had to play with this A LOT to get this to look right
                 # the Plots tab in RStudio is not representative of what the
                 # the saved version will look like
                 units = fig_u)
