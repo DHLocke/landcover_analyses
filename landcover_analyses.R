@@ -1679,7 +1679,7 @@ p_re <- plot_model(mod_5_main,                                     # save the mo
                    type = 're',                                    # more explcit that accepting the defaults
                    show.values = TRUE,
                    value.offset = .3,
-                   title = 'Tree Canopy Cover (%):\nrandom effects',# "\n" means "new line"
+                   title = 'P-A Ratio:\nrandom effects',# "\n" means "new line"
                    #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
                    vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
   theme_bw()
