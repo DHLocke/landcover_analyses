@@ -46,10 +46,14 @@ lapply(packages, library, character.only = TRUE)
 # you will have to change the file path to match the location of the data
 # on your computer
 #sf <- read_sf('/Users/dlocke/temp_MSB4RoyChowdhuryDobler/CBGs/CBG_ALL_v20161014.shp') 
-sf <- read_sf('F:/RA_Data/cblocks/copy/CBG_ALL_v20161014.shp') # this is working for us, 
+# sf <- read_sf('F:/RA_Data/cblocks/copy/CBG_ALL_v20161014.shp') # this is working for us, 
                                                                         # but the better/ more sophistocated why is to something 
                                                                         # like this
 # https://community.rstudio.com/t/project-oriented-workflow-setwd-rm-list-ls-and-computer-fires/3549
+
+#Old path above, here is the new path as of 10/1/2020:
+sf <- read_sf('D:/Macrobio/CBGs/blockgroup_landcover/CBG_ALL_v20161014.shp')
+str(sf) # Read in properly
 
 # These data were in that folder so I could share easily with Carlos
 # but I'm keeping the R project locally here now:
@@ -2319,6 +2323,17 @@ mod <- lm(log_NP_G ~
 plot_model(mod, type = 'diag') # diagnostics YEah - HARD NO
 result <- check_distribution(mod); result # suggests log normal
 
+result
+
+mod_13_append <- mod
+summary(mod_13_append)
+
+
+tab_model(mod_13_append,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Log NP Grass') 
+
 # Model2main. #Tree Patches
 # lets keep this model
 mod_13_main <- mod
@@ -2584,6 +2599,997 @@ tab_model(mod_15_main,
 # PAratio_G      # Parimieter Area ratio for tree canopy
 
 
+### 5.2. Generate prediction graphs of individual predictors for interpretation----
+
+### 5.2.1 Housing age + housing age^2-----
+
+### 5.2.1.1 % Tree Cover by housing age
+
+# generate new data for housing age to plot predicted values
+
+housing.span <- c(rep(seq(min(df$Housing_Age),max(df$Housing_Age), length=50))) # generate new data
+housing2.span <- (housing.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+df.pred.housing <- data.frame(Population_Density = mean(df$Population_Density), # means of each var.
+                              Percent_Own = mean(df$Percent_Own),
+                              Percent_Own_2 = mean(df$Percent_Own_2),
+                              Housing_Age = housing.span, # new span of housing age
+                              Housing_Age_2 = housing2.span, # new span of housing age
+                              Median_Household_Income = mean(df$Median_Household_Income),
+                              Median_Household_Income_2 = mean(df$Median_Household_Income_2),
+                              Percent_White = mean(df$Percent_White),
+                              Percent_Hispanic = mean(df$Percent_Hispanic),
+                              Terrain_Roughness = mean(df$Terrain_Roughness),
+                              MSA = NA) # setting MSA as neutral, so we see the mean for all MSAs
+
+# plot **predicted** housing age graph using means for other variables to visualize relationship
+
+# here's the model again
+
+mod_1_main.boots <- lme4::lmer(Perc_Tree ~
+                                 Population_Density + # fixed effects
+                                 Percent_Own + 
+                                 Percent_Own_2 + 
+                                 Housing_Age + 
+                                 Housing_Age_2 +
+                                 Median_Household_Income + 
+                                 Median_Household_Income_2 + 
+                                 Percent_White +
+                                 Percent_Hispanic + 
+                                 Terrain_Roughness +
+                                 (1 | MSA),                               # random effects
+                               data = df)
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.housing <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.housing, re.form = NA)   # this is predict.merMod 
+}
+
+df.pred.housing$ml.value <- predict.fun.housing(mod_1_main) # run function (see 5.2.1)
+mod_1_main_boots_housing <- bootMer(mod_1_main, predict.fun.housing, nsim = 1000)
+df.pred.housing <- cbind(df.pred.housing, confint(mod_1_main_boots_housing))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Housing_Age_scale_factor <- attr(df$Housing_Age, 'scaled:scale') # 16.92731 find scale and center factors
+Housing_Age_center_factor <- attr(df$Housing_Age, 'scaled:center') # 32.85529
+Housing_Age_2_scale_factor <- attr(df$Housing_Age_2, 'scaled:scale') # 1179.27054
+Housing_Age_2_center_factor <- attr(df$Housing_Age_2, 'scaled:center') # 1365.94922
+
+# backtransform preds
+df.pred.housing$Housing_Age_bt <- (df.pred.housing$Housing_Age * Housing_Age_scale_factor + Housing_Age_center_factor)
+df.pred.housing$Housing_Age_2_bt <- (df.pred.housing$Housing_Age_2 * Housing_Age_2_scale_factor + Housing_Age_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.housing$min_se <- df.pred.housing$ml.value - ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.housing$max_se <- df.pred.housing$ml.value + ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.housing, aes(Housing_Age_bt, ml.value)) +
+  geom_smooth(method="loess") +
+  geom_ribbon(aes(ymin = min_se, ymax = max_se), alpha = 0.2) +
+  xlab('Housing Age in Years') + ylab('Model Predicted Percent Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 35), xlim = c(0,60))
+
+#  geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, Perc_Tree))
+
+# adds in points without controlling for anything
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, Perc_Tree))
+
+### 5.2.1.2 Log NP Tree Canopy by housing age
+
+# generate new data for housing age to plot predicted values
+
+housing.span <- c(rep(seq(min(df$Housing_Age),max(df$Housing_Age), length=50))) # generate new data
+housing2.span <- (housing.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+df.pred.housing <- data.frame(Population_Density = mean(df$Population_Density), # means of each var.
+                              Percent_Own = mean(df$Percent_Own),
+                              Percent_Own_2 = mean(df$Percent_Own_2),
+                              Housing_Age = housing.span, # new span of housing age
+                              Housing_Age_2 = housing2.span, # new span of housing age
+                              Median_Household_Income = mean(df$Median_Household_Income),
+                              Median_Household_Income_2 = mean(df$Median_Household_Income_2),
+                              Percent_White = mean(df$Percent_White),
+                              Percent_Hispanic = mean(df$Percent_Hispanic),
+                              Terrain_Roughness = mean(df$Terrain_Roughness),
+                              MSA = NA) # setting MSA as neutral, so we see the mean for all MSAs
+
+# taking the log requires no zeros, so lets look for those first
+df %>% filter(NP_T > 0) %>% 
+  mutate(log_NP_T = log(NP_T)) -> df_NP_T # 22 rows, less than 1%
+
+mod_2_main.boots <- lme4::lmer(log_NP_T ~ 
+                                 Population_Density + # fixed effects
+                                 Percent_Own + 
+                                 Housing_Age + 
+                                 Housing_Age_2 +
+                                 Median_Household_Income +
+                                 Median_Household_Income_2 +
+                                 Percent_White +
+                                 Percent_Hispanic + 
+                                 Percent_Own +
+                                 Terrain_Roughness +
+                                 (1 | MSA),                               # random effects
+                               data = df_NP_T)
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.housing <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.housing, re.form = NA)   # this is predict.merMod 
+}
+
+df.pred.housing$ml.value <- predict.fun.housing(mod_2_main.boots) # run function (see 5.2.1)
+mod_2_main_boots_housing <- bootMer(mod_2_main, predict.fun.housing, nsim = 1000)
+df.pred.housing <- cbind(df.pred.housing, confint(mod_2_main_boots_housing))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Housing_Age_scale_factor <- attr(df$Housing_Age, 'scaled:scale') # 16.92731 find scale and center factors
+Housing_Age_center_factor <- attr(df$Housing_Age, 'scaled:center') # 32.85529
+Housing_Age_2_scale_factor <- attr(df$Housing_Age_2, 'scaled:scale') # 1179.27054
+Housing_Age_2_center_factor <- attr(df$Housing_Age_2, 'scaled:center') # 1365.94922
+
+# backtransform preds
+df.pred.housing$Housing_Age_bt <- (df.pred.housing$Housing_Age * Housing_Age_scale_factor + Housing_Age_center_factor)
+df.pred.housing$Housing_Age_2_bt <- (df.pred.housing$Housing_Age_2 * Housing_Age_2_scale_factor + Housing_Age_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.housing$min_se <- df.pred.housing$ml.value - ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.housing$max_se <- df.pred.housing$ml.value + ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.housing, aes(Housing_Age_bt, exp(ml.value))) + #transform out of log
+  geom_smooth(method="loess") +
+  geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) + #transform se out of log
+  xlab('Housing Age in Years') + ylab('NP Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 10000), xlim = c(0,60))
+
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, log(NP_T)))
+# adds in points without controlling for anything
+
+
+### 5.2.1.3 MPA Tree Canopy w/ and w/o PHX by housing age
+
+### 5.2.1.3.1 w/o PHX
+
+#Models again...
+
+df %>% filter(MPA_T > 0) -> df_MPA_T # just 22 rows (<1%) dropped
+
+df_MPA_T %>% filter(MSA == 'PHX') -> df_MPA_T_PHX  # PHOENIX data
+df_MPA_T %>% filter(MSA != 'PHX') -> df_MPA_T_OTH  # all other data
+
+mod <- lme4::glmer(MPA_T ~ 
+                     Population_Density + # fixed effects
+                     Percent_Own + 
+                     #Percent_Own_2 + 
+                     Housing_Age + 
+                     Housing_Age_2 +
+                     Median_Household_Income + 
+                     Median_Household_Income_2 + 
+                     Percent_White +
+                     Percent_Hispanic + 
+                     Terrain_Roughness +
+                     (1 | MSA),                               # random effects
+                   data = df_MPA_T_OTH, 
+                   family=Gamma(link="log")) # family of glm
+
+plot_model(mod, type = 'diag') # diagnostics
+result <- check_distribution(mod); result # VERY BAD
+# I think we can live with this model. 
+
+# # Model3main. Tree MPA
+# lets keep this model
+mod_3_main.boots <- mod
+
+
+mod.phx <- glm(MPA_T ~ # note this is NOT a mixed model
+                 Population_Density + # fixed effects
+                 Percent_Own + 
+                 #Percent_Own_2 + 
+                 Housing_Age + 
+                 Housing_Age_2 +
+                 Median_Household_Income + 
+                 Median_Household_Income_2 + 
+                 Percent_White +
+                 Percent_Hispanic + 
+                 Terrain_Roughness, # +
+               #(1 | MSA),                               # random effects TURNED OFF
+               data = df_MPA_T_PHX, 
+               family=Gamma(link="log")) # family of glm
+
+# TODO figure out why this doesn't work
+plot_model(mod.phx, type = 'diag') # diagnostics 
+result <- check_distribution(mod.phx); result # VERY BAD
+# I think we can live with this model. 
+df_MPA_T$MSA
+# # Model3main. Tree MPA
+# lets keep this model
+mod_3b_main.boots <- mod.phx
+summary(mod_3_main.boots)
+
+# generate new data for housing age to plot predicted values
+
+#Note that for this particular model, the df is now df_MPA_T_PHX for each
+housing.span <- c(rep(seq(min(df_MPA_T_OTH$Housing_Age), max(df_MPA_T_OTH$Housing_Age), length=50))) # generate new data
+housing2.span <- (housing.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+#Note that for this particular model, the df is now df_MPA_T_PHX for each
+
+df.pred.housing <- data.frame(Population_Density = mean(df_MPA_T_OTH$Population_Density), # means of each var.
+                              Percent_Own = mean(df_MPA_T_OTH$Percent_Own),
+                             # Percent_Own_2 = mean(df_MPA_T_OTH$Percent_Own_2),
+                              Housing_Age = housing.span, # new span of housing age
+                              Housing_Age_2 = housing2.span, # new span of housing age
+                              Median_Household_Income = mean(df_MPA_T_OTH$Median_Household_Income),
+                              Median_Household_Income_2 = mean(df_MPA_T_OTH$Median_Household_Income_2),
+                              Percent_White = mean(df_MPA_T_OTH$Percent_White),
+                              Percent_Hispanic = mean(df_MPA_T_OTH$Percent_Hispanic),
+                             Terrain_Roughness = mean(df_MPA_T_OTH$Terrain_Roughness),
+                             MSA = NA) #Specified an MSA ("MSP")
+
+df_MPA_T_OTH$MSA
+                               
+str(df_MPA_T_PHX$Population_Density) #num
+str(df_MPA_T_PHX$Percent_Own) #num
+str(df_MPA_T_PHX$Housing_Age) #num
+str(df_MPA_T_PHX$Housing_Age_2) #num
+str(df_MPA_T_PHX$Median_Household_Income) #num
+str(df_MPA_T_PHX$Median_Household_Income_2) #num
+str(df_MPA_T_PHX$Percent_White) #num
+str(df_MPA_T_PHX$Percent_Hispanic) #num
+str(df_MPA_T_PHX$Terrain_Roughness) #num
+
+str(df.pred.housing)
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.housing <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.housing, re.form = NA)   # this is predict.glm, not for mixed models
+}
+
+df.pred.housing$ml.value <- predict.fun.housing(mod_3_main.boots) # run function (see 5.2.1)
+mod_3_main_boots_housing <- bootMer(mod_3_main.boots, predict.fun.housing, nsim = 100) #Running 100 for now start 1:31
+df.pred.housing <- cbind(df.pred.housing, confint(mod_3_main_boots_housing))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Housing_Age_scale_factor <- attr(df$Housing_Age, 'scaled:scale') # 16.92731 find scale and center factors
+Housing_Age_center_factor <- attr(df$Housing_Age, 'scaled:center') # 32.85529
+Housing_Age_2_scale_factor <- attr(df$Housing_Age_2, 'scaled:scale') # 1179.27054
+Housing_Age_2_center_factor <- attr(df$Housing_Age_2, 'scaled:center') # 1365.94922
+
+# backtransform preds
+df.pred.housing$Housing_Age_bt <- (df.pred.housing$Housing_Age * Housing_Age_scale_factor + Housing_Age_center_factor)
+df.pred.housing$Housing_Age_2_bt <- (df.pred.housing$Housing_Age_2 * Housing_Age_2_scale_factor + Housing_Age_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.housing$min_se <- df.pred.housing$ml.value - ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.housing$max_se <- df.pred.housing$ml.value + ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.housing, aes(Housing_Age_bt, exp(ml.value))) + #transform out of log
+  geom_smooth(method="loess") +
+ # geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) + #transform se out of log
+  xlab('Housing Age in Years') + ylab('MPA Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 0.15), xlim = c(0,60))
+
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, log(NP_T)))
+# adds in points without controlling for anything
+
+### 5.2.1.3.1 PHX Only
+
+# FIXME Getting error when running predict.glm with newdata (error: variables were specified with different types from the fit)
+
+#Models again...
+
+df %>% filter(MPA_T > 0) -> df_MPA_T # just 22 rows (<1%) dropped
+
+df_MPA_T %>% filter(MSA == 'PHX') -> df_MPA_T_PHX  # PHOENIX data
+df_MPA_T %>% filter(MSA != 'PHX') -> df_MPA_T_OTH  # all other data
+
+mod.phx <- glm(MPA_T ~ # note this is NOT a mixed model
+                 Population_Density + # fixed effects
+                 Percent_Own + 
+                 #Percent_Own_2 + 
+                 Housing_Age + 
+                 Housing_Age_2 +
+                 Median_Household_Income + 
+                 Median_Household_Income_2 + 
+                 Percent_White +
+                 Percent_Hispanic + 
+                 Terrain_Roughness, # +
+               #(1 | MSA),                               # random effects TURNED OFF
+               data = df_MPA_T_PHX, 
+               family=Gamma(link="log")) # family of glm
+
+summary(mod.phx)
+
+# TODO figure out why this doesn't work
+plot_model(mod.phx, type = 'diag') # diagnostics 
+result <- check_distribution(mod.phx); result # VERY BAD
+# I think we can live with this model. 
+
+# # Model3main. Tree MPA
+# lets keep this model
+mod_3b_main.boots <- mod.phx
+summary(mod_3b_main.boots)
+
+# generate new data for housing age to plot predicted values
+
+#Note that for this particular model, the df is now df_MPA_T_PHX for each
+housing.span <- c(rep(seq(min(df_MPA_T_PHX$Housing_Age), max(df_MPA_T_PHX$Housing_Age), length=50))) # generate new data
+housing2.span <- (housing.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+#Note that for this particular model, the df is now df_MPA_T_PHX for each
+
+df.pred.housing.glm <- data.frame(Population_Density = as.numeric(mean(df_MPA_T_PHX$Population_Density)), # means of each var.
+                              Percent_Own = as.numeric(mean(df_MPA_T_PHX$Percent_Own)),
+                              # Percent_Own_2 = as.numeric(mean(df_MPA_T_PHX$Percent_Own_2)),
+                              Housing_Age = as.numeric(housing.span), # new span of housing age
+                              Housing_Age_2 = as.numeric(housing2.span), # new span of housing age
+                              Median_Household_Income = as.numeric(mean(df_MPA_T_PHX$Median_Household_Income)),
+                              Median_Household_Income_2 = as.numeric(mean(df_MPA_T_PHX$Median_Household_Income_2)),
+                              Percent_White = as.numeric(mean(df_MPA_T_PHX$Percent_White)),
+                              Percent_Hispanic = as.numeric(mean(df_MPA_T_PHX$Percent_Hispanic)),
+                              Terrain_Roughness = as.numeric(mean(df_MPA_T_PHX$Terrain_Roughness))) #,
+                            # MSA = NA) # No mixed effects in this model
+
+str(df_MPA_T_PHX$Population_Density) #num
+str(df_MPA_T_PHX$Percent_Own) #num
+str(df_MPA_T_PHX$Housing_Age) #num
+str(df_MPA_T_PHX$Housing_Age_2) #num
+str(df_MPA_T_PHX$Median_Household_Income) #num
+str(df_MPA_T_PHX$Median_Household_Income_2) #num
+str(df_MPA_T_PHX$Percent_White) #num
+str(df_MPA_T_PHX$Percent_Hispanic) #num
+str(df_MPA_T_PHX$Terrain_Roughness) #num
+
+str(df.pred.housing) #data frame with all numeric variables
+str(df_MPA_T_PHX) #data frame with all numeric variables (for variables above)
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.housing <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.housing.glm)   # this is predict.glm, not for mixed models
+}
+
+df.pred.housing$ml.value <- predict.fun.housing(mod_3b_main.boots) # run function (see 5.2.1)
+mod_3b_main_boots_housing <- bootMer(mod_3b_main.boots, predict.fun.housing, nsim = 100) #Running 100 for now start 1:31
+df.pred.housing <- cbind(df.pred.housing, confint(mod_3b_main_boots_housing))
+
+predict(mod_3b_main.boots, newdata = df.pred.housing.glm)
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Housing_Age_scale_factor <- attr(df$Housing_Age, 'scaled:scale') # 16.92731 find scale and center factors
+Housing_Age_center_factor <- attr(df$Housing_Age, 'scaled:center') # 32.85529
+Housing_Age_2_scale_factor <- attr(df$Housing_Age_2, 'scaled:scale') # 1179.27054
+Housing_Age_2_center_factor <- attr(df$Housing_Age_2, 'scaled:center') # 1365.94922
+
+# backtransform preds
+df.pred.housing$Housing_Age_bt <- (df.pred.housing$Housing_Age * Housing_Age_scale_factor + Housing_Age_center_factor)
+df.pred.housing$Housing_Age_2_bt <- (df.pred.housing$Housing_Age_2 * Housing_Age_2_scale_factor + Housing_Age_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.housing$min_se <- df.pred.housing$ml.value - ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.housing$max_se <- df.pred.housing$ml.value + ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.housing, aes(Housing_Age_bt, exp(ml.value))) + #transform out of log
+  geom_smooth(method="loess") +
+  # geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) + #transform se out of log
+  xlab('Housing Age in Years') + ylab('MPA Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 0.15), xlim = c(0,60))
+
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, log(NP_T)))
+# adds in points without controlling for anything
+
+
+### 5.2.1.4 C/V Tree Canopy by housing age
+
+df %>% filter(CV_T > 0) -> df_CV_T
+
+mod_4_main.boots <- lme4::lmer(log(CV_T) ~ 
+                                 Population_Density + # fixed effects
+                                 I(Population_Density*Population_Density) +
+                                 Percent_Own + 
+                                 Percent_Own_2 + 
+                                 Housing_Age + 
+                                 Housing_Age_2 +
+                                 Median_Household_Income + 
+                                 Median_Household_Income_2 + 
+                                 Percent_White +
+                                 Percent_Hispanic + 
+                                 Terrain_Roughness +
+                                 (1 | MSA),                               # random effects
+                               data = df_CV_T)
+
+
+# generate new data for housing age to plot predicted values
+
+housing.span <- c(rep(seq(min(df_CV_T$Housing_Age),max(df_CV_T$Housing_Age), length=50))) # generate new data
+housing2.span <- (housing.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+df.pred.housing <- data.frame(Population_Density = mean(df_CV_T$Population_Density), # means of each var.
+                              Percent_Own = mean(df_CV_T$Percent_Own),
+                              Percent_Own_2 = mean(df_CV_T$Percent_Own_2),
+                              Housing_Age = housing.span, # new span of housing age
+                              Housing_Age_2 = housing2.span, # new span of housing age
+                              Median_Household_Income = mean(df_CV_T$Median_Household_Income),
+                              Median_Household_Income_2 = mean(df_CV_T$Median_Household_Income_2),
+                              Percent_White = mean(df_CV_T$Percent_White),
+                              Percent_Hispanic = mean(df_CV_T$Percent_Hispanic),
+                              Terrain_Roughness = mean(df_CV_T$Terrain_Roughness),
+                              MSA = NA) # setting MSA as neutral, so we see the mean for all MSAs
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.housing <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.housing, re.form = NA)   # this is predict.merMod 
+}
+
+df.pred.housing$ml.value <- predict.fun.housing(mod_4_main.boots) # run function (see 5.2.1)
+mod_4_main_boots_housing <- bootMer(mod_4_main.boots, predict.fun.housing, nsim = 1000)
+df.pred.housing <- cbind(df.pred.housing, confint(mod_4_main_boots_housing))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Housing_Age_scale_factor <- attr(df_CV_T$Housing_Age, 'scaled:scale') # 16.92731 find scale and center factors
+Housing_Age_center_factor <- attr(df_CV_T$Housing_Age, 'scaled:center') # 32.85529
+Housing_Age_2_scale_factor <- attr(df_CV_T$Housing_Age_2, 'scaled:scale') # 1179.27054
+Housing_Age_2_center_factor <- attr(df_CV_T$Housing_Age_2, 'scaled:center') # 1365.94922
+
+# backtransform preds
+df.pred.housing$Housing_Age_bt <- (df.pred.housing$Housing_Age * Housing_Age_scale_factor + Housing_Age_center_factor)
+df.pred.housing$Housing_Age_2_bt <- (df.pred.housing$Housing_Age_2 * Housing_Age_2_scale_factor + Housing_Age_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.housing$min_se <- df.pred.housing$ml.value - ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.housing$max_se <- df.pred.housing$ml.value + ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.housing, aes(Housing_Age_bt, exp(ml.value))) + #transform out of log
+  geom_smooth(method="loess") +
+  geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) + #transform se out of log
+  xlab('Housing Age in Years') + ylab('C/V Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 600), xlim = c(0,60))
+
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, log(NP_T)))
+# adds in points without controlling for anything
+
+### 5.2.1.5 P/A Ratio Tree Canopy w/ and w/o PHX by housing age
+
+# cant log zeros.. count first
+df %>% filter(PAratio_T > 0) %>% 
+  mutate(log_PAratio_T = log(PAratio_T)) -> df_PAratio_T # again only dropped a few (20) rows
+
+df_PAratio_T %>% filter(MSA == 'PHX') -> df_PAratio_T_PHX  # PHOENIX data
+df_PAratio_T %<>% filter(MSA != 'PHX')                 # all other data
+
+mod <- lme4::lmer(log_PAratio_T ~
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    # Percent_Own_2 + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income + 
+                    Median_Household_Income_2 + 
+                    Percent_White +
+                    Percent_Hispanic + 
+                    Terrain_Roughness +
+                    (1 | MSA),                               # random effects
+                  data = df_PAratio_T)
+
+mod_5_main.boots <- mod
+summary(mod_5_main.boots)
+
+# generate new data for housing age to plot predicted values
+
+housing.span <- c(rep(seq(min(df_PAratio_T$Housing_Age),max(df_PAratio_T$Housing_Age), length=50))) # generate new data
+housing2.span <- (housing.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+df.pred.housing <- data.frame(Population_Density = mean(df_PAratio_T$Population_Density), # means of each var.
+                              Percent_Own = mean(df_PAratio_T$Percent_Own),
+                            # Percent_Own_2 = mean(df_PAratio_T$Percent_Own_2),
+                              Housing_Age = housing.span, # new span of housing age
+                              Housing_Age_2 = housing2.span, # new span of housing age
+                              Median_Household_Income = mean(df_PAratio_T$Median_Household_Income),
+                              Median_Household_Income_2 = mean(df_PAratio_T$Median_Household_Income_2),
+                              Percent_White = mean(df_PAratio_T$Percent_White),
+                              Percent_Hispanic = mean(df_PAratio_T$Percent_Hispanic),
+                              Terrain_Roughness = mean(df_PAratio_T$Terrain_Roughness),
+                              MSA = NA) # setting MSA as neutral, so we see the mean for all MSAs
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.housing <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.housing, re.form = NA)   # this is predict.merMod 
+}
+
+df.pred.housing$ml.value <- predict.fun.housing(mod_5_main.boots) # run function (see 5.2.1)
+mod_5_main_boots_housing <- bootMer(mod_5_main.boots, predict.fun.housing, nsim = 1000)
+df.pred.housing <- cbind(df.pred.housing, confint(mod_5_main_boots_housing))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Housing_Age_scale_factor <- attr(df_PAratio_T$Housing_Age, 'scaled:scale') # find scale and center factors
+Housing_Age_center_factor <- attr(df_PAratio_T$Housing_Age, 'scaled:center')
+Housing_Age_2_scale_factor <- attr(df_PAratio_T$Housing_Age_2, 'scaled:scale')
+Housing_Age_2_center_factor <- attr(df_PAratio_T$Housing_Age_2, 'scaled:center')
+
+# backtransform preds
+df.pred.housing$Housing_Age_bt <- (df.pred.housing$Housing_Age * Housing_Age_scale_factor + Housing_Age_center_factor)
+df.pred.housing$Housing_Age_2_bt <- (df.pred.housing$Housing_Age_2 * Housing_Age_2_scale_factor + Housing_Age_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.housing$min_se <- df.pred.housing$ml.value - ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.housing$max_se <- df.pred.housing$ml.value + ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.housing, aes(Housing_Age_bt, exp(ml.value))) + #transform out of log
+  geom_smooth(method="loess") +
+  geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) + #transform se out of log
+  xlab('Housing Age in Years') + ylab('P/A Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 20000), xlim = c(0,60))
+
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, log(NP_T)))
+# adds in points without controlling for anything
+
+### 5.2.1.6 % Grass Cover (Gamma) by housing age
+# gamma model won't run or converge with bootstrapping
+#Linear model shows flat effect
+
+# lets try gamma, but gamma can't take zeros.
+df %>% filter(Perc_Grass > 0) -> df_grass # 18 rows cut, less 1%
+
+# note that original gamma model won't converge so here I run a log gaussian lmer
+
+mod_6_main.boots <- lme4::lmer(log(Perc_Grass) ~ 
+                                 Population_Density + # fixed effects
+                                 Percent_Own + 
+                                 #Percent_Own_2 + 
+                                 Housing_Age + 
+                                 Housing_Age_2 +
+                                 Median_Household_Income + 
+                                 Median_Household_Income_2 + 
+                                 Percent_White +
+                                 Percent_Hispanic + 
+                                 Terrain_Roughness +
+                                 (1 | MSA),                               # random effects
+                               data = df_grass)
+summary(mod_6_main.boots)
+
+# generate new data for housing age to plot predicted values
+
+#Note different df, is now df_grass
+housing.span <- c(rep(seq(min(df_grass$Housing_Age),max(df_grass$Housing_Age), length=50))) # generate new data
+housing2.span <- (housing.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+df.pred.housing <- data.frame(Population_Density = mean(df_grass$Population_Density), # means of each var.
+                              Percent_Own = mean(df_grass$Percent_Own),
+                              #   Percent_Own_2 = mean(df_grass$Percent_Own_2), NOT IN MODEL
+                              Housing_Age = housing.span, # new span of housing age
+                              Housing_Age_2 = housing2.span, # new span of housing age
+                              Median_Household_Income = mean(df_grass$Median_Household_Income),
+                              Median_Household_Income_2 = mean(df_grass$Median_Household_Income_2),
+                              Percent_White = mean(df_grass$Percent_White),
+                              Percent_Hispanic = mean(df_grass$Percent_Hispanic),
+                              Terrain_Roughness = mean(df_grass$Terrain_Roughness),
+                              MSA = NA) # setting MSA as neutral, so we see the mean for all MSAs
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.housing <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.housing, re.form = NA)   # this is predict.merMod 
+}
+
+df.pred.housing$ml.value <- predict.fun.housing(mod_6_main.boots) # run function (see 5.2.1)
+mod_6_main_boots_housing <- bootMer(mod_6_main.boots, predict.fun.housing, nsim = 1000)
+df.pred.housing <- cbind(df.pred.housing, confint(mod_6_main_boots_housing))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Housing_Age_scale_factor <- attr(df$Housing_Age, 'scaled:scale') # 16.92731 find scale and center factors
+Housing_Age_center_factor <- attr(df$Housing_Age, 'scaled:center') # 32.85529
+Housing_Age_2_scale_factor <- attr(df$Housing_Age_2, 'scaled:scale') # 1179.27054
+Housing_Age_2_center_factor <- attr(df$Housing_Age_2, 'scaled:center') # 1365.94922
+
+# backtransform preds
+df.pred.housing$Housing_Age_bt <- (df.pred.housing$Housing_Age * Housing_Age_scale_factor + Housing_Age_center_factor)
+df.pred.housing$Housing_Age_2_bt <- (df.pred.housing$Housing_Age_2 * Housing_Age_2_scale_factor + Housing_Age_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.housing$min_se <- df.pred.housing$ml.value - ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.housing$max_se <- df.pred.housing$ml.value + ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.housing, aes(Housing_Age_bt, exp(ml.value))) + #transform out of log
+  geom_smooth(method="loess") +
+  geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) + #transform se out of log
+  xlab('Housing Age in Years') + ylab('% Grass') + theme_classic() +
+  coord_cartesian(ylim = c(0, 50), xlim = c(0,60))
+summary(mod_6_main) #Mod with Gamma, doesn't seem to converge
+summary(mod_6_main.boots) #Linear does converge but housing age is n.s.
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, log(NP_T)))
+# adds in points without controlling for anything
+
+
+### 5.2.2 Population Density
+
+### 5.2.2.1 Population Density vs. CV Tree Cover (only squared one for pop dens)
+
+
+df %>% filter(CV_T > 0) -> df_CV_T
+
+df_CV_T$Population_Density_2 <- df_CV_T$Population_Density*df_CV_T$Population_Density
+
+mod_4_main.boots <- lme4::lmer(log(CV_T) ~ 
+                                 Population_Density + # fixed effects
+                                 Population_Density_2 +
+                                 Percent_Own + 
+                                 Percent_Own_2 + 
+                                 Housing_Age + 
+                                 Housing_Age_2 +
+                                 Median_Household_Income + 
+                                 Median_Household_Income_2 + 
+                                 Percent_White +
+                                 Percent_Hispanic + 
+                                 Terrain_Roughness +
+                                 (1 | MSA),                               # random effects
+                               data = df_CV_T)
+
+
+# generate new data for housing age to plot predicted values
+
+Population_Density.span <- c(rep(seq(min(df_CV_T$Population_Density),max(df_CV_T$Population_Density), length=50))) # generate new data
+Population_Density2.span <- (Population_Density.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+df.pred.popdens <- data.frame(Population_Density = Population_Density.span,
+                              Population_Density_2 = Population_Density2.span,
+                              Percent_Own = mean(df_CV_T$Percent_Own), # means of each var.
+                              Percent_Own_2 = mean(df_CV_T$Percent_Own_2),
+                              Housing_Age = mean(df_CV_T$Housing_Age), # new span of housing age
+                              Housing_Age_2 = mean(df_CV_T$Housing_Age_2), # new span of housing age
+                              Median_Household_Income = mean(df_CV_T$Median_Household_Income),
+                              Median_Household_Income_2 = mean(df_CV_T$Median_Household_Income_2),
+                              Percent_White = mean(df_CV_T$Percent_White),
+                              Percent_Hispanic = mean(df_CV_T$Percent_Hispanic),
+                              Terrain_Roughness = mean(df_CV_T$Terrain_Roughness),
+                              MSA = NA) # setting MSA as neutral, so we see the mean for all MSAs
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.popdens <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.popdens, re.form = NA)   # this is predict.merMod 
+}
+
+df.pred.popdens$ml.value <- predict.fun.popdens(mod_4_main.boots) # run function (see 5.2.1)
+mod_4_main_boots_popdens <- bootMer(mod_4_main.boots, predict.fun.popdens, nsim = 1000)
+df.pred.popdens <- cbind(df.pred.popdens, confint(mod_4_main_boots_popdens))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Population_Density_scale_factor <- attr(df_CV_T$Population_Density, 'scaled:scale') # find scale and center factors
+Population_Density_center_factor <- attr(df_CV_T$Population_Density, 'scaled:center')
+Population_Density_2_scale_factor <- (attr(df_CV_T$Population_Density, 'scaled:scale'))^2
+Population_Density_2_center_factor <- (attr(df_CV_T$Population_Density, 'scaled:center'))^2
+
+# backtransform preds
+df.pred.popdens$Population_Density_bt <- (df.pred.popdens$Population_Density * Population_Density_scale_factor + Population_Density_center_factor)
+df.pred.popdens$Population_Density_2_bt <- (df.pred.popdens$Population_Density_2 * Population_Density_2_scale_factor + Population_Density_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.popdens$min_se <- df.pred.popdens$ml.value - ((df.pred.popdens$`97.5 %` - df.pred.popdens$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.popdens$max_se <- df.pred.popdens$ml.value + ((df.pred.popdens$`97.5 %` - df.pred.popdens$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.popdens, aes(Population_Density_bt, exp(ml.value))) + #transform out of log
+  geom_smooth(method="loess") +
+  geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) + #transform se out of log
+  xlab('Population Density by Census Block Group') + ylab('C/V Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 600), xlim = c(0,23000))
+
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, log(NP_T)))
+# adds in points without controlling for anything
+
+
+### 5.2.3 Median Household Income
+
+### 5.2.3.1 Median Household Income vs. % Tree Cover
+
+# generate new data for housing age to plot predicted values
+
+income.span <- c(rep(seq(min(df$Median_Household_Income),max(df$Median_Household_Income), length=50))) # generate new data
+income2.span <- (income.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+df.pred.income <- data.frame(Population_Density = mean(df$Population_Density), # means of each var.
+                              Percent_Own = mean(df$Percent_Own),
+                              Percent_Own_2 = mean(df$Percent_Own_2),
+                              Housing_Age = mean(df$Housing_Age),
+                              Housing_Age_2 = mean(df$Housing_Age_2), 
+                              Median_Household_Income = income.span,  # new span of income
+                              Median_Household_Income_2 = income2.span, # new span of income2
+                              Percent_White = mean(df$Percent_White),
+                              Percent_Hispanic = mean(df$Percent_Hispanic),
+                              Terrain_Roughness = mean(df$Terrain_Roughness),
+                              MSA = NA) # setting MSA as neutral, so we see the mean for all MSAs
+
+# plot **predicted** housing age graph using means for other variables to visualize relationship
+
+# here's the model again
+
+mod_1_main.boots <- lme4::lmer(Perc_Tree ~
+                                 Population_Density + # fixed effects
+                                 Percent_Own + 
+                                 Percent_Own_2 + 
+                                 Housing_Age + 
+                                 Housing_Age_2 +
+                                 Median_Household_Income + 
+                                 Median_Household_Income_2 + 
+                                 Percent_White +
+                                 Percent_Hispanic + 
+                                 Terrain_Roughness +
+                                 (1 | MSA),                               # random effects
+                               data = df)
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.income <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.income, re.form = NA)   # this is predict.merMod 
+}
+
+df.pred.income$ml.value <- predict.fun.income(mod_1_main.boots) # run function (see 5.2.1)
+mod_1_main_boots_income <- bootMer(mod_1_main.boots, predict.fun.income, nsim = 1000)
+df.pred.income <- cbind(df.pred.income, confint(mod_1_main_boots_income))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Median_Household_Income_scale_factor <- attr(df$ Median_Household_Income, 'scaled:scale') # find scale and center factors
+Median_Household_Income_center_factor <- attr(df$ Median_Household_Income, 'scaled:center')
+Median_Household_Income_2_scale_factor <- attr(df$ Median_Household_Income_2, 'scaled:scale')
+Median_Household_Income_2_center_factor <- attr(df$ Median_Household_Income_2, 'scaled:center')
+
+# backtransform preds
+df.pred.income$ Median_Household_Income_bt <- (df.pred.income$ Median_Household_Income *  Median_Household_Income_scale_factor +  Median_Household_Income_center_factor)
+df.pred.income$ Median_Household_Income_2_bt <- (df.pred.income$ Median_Household_Income_2 *  Median_Household_Income_2_scale_factor +  Median_Household_Income_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.income$min_se <- df.pred.income$ml.value - ((df.pred.income$`97.5 %` - df.pred.income$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.income$max_se <- df.pred.income$ml.value + ((df.pred.income$`97.5 %` - df.pred.income$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.income, aes(Median_Household_Income_bt*1000, ml.value)) +
+  geom_smooth(method="loess") +
+  geom_ribbon(aes(ymin = min_se, ymax = max_se), alpha = 0.2) +
+  xlab('Median Household Income') + ylab('Model Predicted Percent Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 35), xlim = c(0,210000))
+
+#  geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, Perc_Tree))
+
+# adds in points without controlling for anything
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, Perc_Tree))
+
+### 5.2.3.2 Median Household Income vs. MPA Tree Cover w/o PHX
+
+df %>% filter(MPA_T > 0) -> df_MPA_T # just 22 rows (<1%) dropped
+
+df_MPA_T %>% filter(MSA == 'PHX') -> df_MPA_T_PHX  # PHOENIX data
+df_MPA_T %>% filter(MSA != 'PHX') -> df_MPA_T_OTH  # all other data
+
+mod <- lme4::glmer(MPA_T ~ 
+                     Population_Density + # fixed effects
+                     Percent_Own + 
+                     #Percent_Own_2 + 
+                     Housing_Age + 
+                     Housing_Age_2 +
+                     Median_Household_Income + 
+                     Median_Household_Income_2 + 
+                     Percent_White +
+                     Percent_Hispanic + 
+                     Terrain_Roughness +
+                     (1 | MSA),                               # random effects
+                   data = df_MPA_T_OTH, 
+                   family=Gamma(link="log")) # family of glm
+
+plot_model(mod, type = 'diag') # diagnostics
+result <- check_distribution(mod); result # VERY BAD
+# I think we can live with this model. 
+
+# # Model3main. Tree MPA
+# lets keep this model
+mod_3_main.boots <- mod
+
+
+mod.phx <- glm(MPA_T ~ # note this is NOT a mixed model
+                 Population_Density + # fixed effects
+                 Percent_Own + 
+                 #Percent_Own_2 + 
+                 Housing_Age + 
+                 Housing_Age_2 +
+                 Median_Household_Income + 
+                 Median_Household_Income_2 + 
+                 Percent_White +
+                 Percent_Hispanic + 
+                 Terrain_Roughness, # +
+               #(1 | MSA),                               # random effects TURNED OFF
+               data = df_MPA_T_PHX, 
+               family=Gamma(link="log")) # family of glm
+
+# TODO figure out why this doesn't work
+plot_model(mod.phx, type = 'diag') # diagnostics 
+result <- check_distribution(mod.phx); result # VERY BAD
+# I think we can live with this model. 
+df_MPA_T$MSA
+# # Model3main. Tree MPA
+# lets keep this model
+mod_3b_main.boots <- mod.phx
+summary(mod_3_main.boots)
+
+# generate new data for housing age to plot predicted values
+
+#Note that for this particular model, the df is now df_MPA_T_PHX for each
+income.span <- c(rep(seq(min(df_MPA_T_OTH$Median_Household_Income), max(df_MPA_T_OTH$Median_Household_Income), length=50))) # generate new data
+income2.span <- (income.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+#Note that for this particular model, the df is now df_MPA_T_PHX for each
+
+df.pred.income <- data.frame(Population_Density = mean(df_MPA_T_OTH$Population_Density), # means of each var.
+                              Percent_Own = mean(df_MPA_T_OTH$Percent_Own),
+                              # Percent_Own_2 = mean(df_MPA_T_OTH$Percent_Own_2),
+                              Housing_Age = mean(df_MPA_T_OTH$Housing_Age), # new span of housing age
+                              Housing_Age_2 = mean(df_MPA_T_OTH$Housing_Age_2), # new span of housing age
+                              Median_Household_Income = income.span,
+                              Median_Household_Income_2 = income2.span,
+                              Percent_White = mean(df_MPA_T_OTH$Percent_White),
+                              Percent_Hispanic = mean(df_MPA_T_OTH$Percent_Hispanic),
+                              Terrain_Roughness = mean(df_MPA_T_OTH$Terrain_Roughness),
+                              MSA = NA) #Nonspecified MSA
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.income <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.income, re.form = NA)   # this is predict.glm, not for mixed models
+}
+
+df.pred.income$ml.value <- predict.fun.income(mod_3_main.boots) # run function (see 5.2.1)
+mod_3_main_boots_income <- bootMer(mod_3_main.boots, predict.fun.income, nsim = 100) #Running 100 for now start 1:31
+df.pred.income <- cbind(df.pred.income, confint(mod_3_main_boots_income))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Income_scale_factor <- attr(df$Median_Household_Income, 'scaled:scale') # find scale and center factors
+Income_center_factor <- attr(df$Median_Household_Income, 'scaled:center')
+Income_2_scale_factor <- attr(df$Median_Household_Income_2, 'scaled:scale')
+Income_2_center_factor <- attr(df$Median_Household_Income_2, 'scaled:center')
+
+# backtransform preds
+df.pred.income$Income_bt <- (df.pred.income$Median_Household_Income * Income_scale_factor + Income_center_factor)
+df.pred.income$Income_2_bt <- (df.pred.income$Median_Household_Income * Income_2_scale_factor + Income_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.income$min_se <- df.pred.income$ml.value - ((df.pred.income$`97.5 %` - df.pred.income$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.income$max_se <- df.pred.income$ml.value + ((df.pred.income$`97.5 %` - df.pred.income$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.income, aes(Income_bt*1000, ml.value)) + #transform out of log
+  geom_smooth(method="loess", se = FALSE) +
+  # geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) + #transform se out of log
+  xlab('Median Household Income') + ylab('Log MPA Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(-3.5, 2), xlim = c(0,200000))
+
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, log(NP_T)))
+# adds in points without controlling for anything
+
+
+### 5.2.3.3 Median Household Income vs. CV Tree Cover
+
+df %>% filter(CV_T > 0) -> df_CV_T
+
+df_CV_T$Population_Density_2 <- df_CV_T$Population_Density*df_CV_T$Population_Density
+
+mod_4_main.boots <- lme4::lmer(log(CV_T) ~ 
+                                 Population_Density + # fixed effects
+                                 Population_Density_2 +
+                                 Percent_Own + 
+                                 Percent_Own_2 + 
+                                 Housing_Age + 
+                                 Housing_Age_2 +
+                                 Median_Household_Income + 
+                                 Median_Household_Income_2 + 
+                                 Percent_White +
+                                 Percent_Hispanic + 
+                                 Terrain_Roughness +
+                                 (1 | MSA),                               # random effects
+                               data = df_CV_T)
+
+# generate new data for housing age to plot predicted values
+
+income.span <- c(rep(seq(min(df_CV_T$Median_Household_Income),max(df_CV_T$Median_Household_Income), length=50))) # generate new data
+income2.span <- (income.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+df.pred.income <- data.frame(Population_Density = mean(df_CV_T$Population_Density), # means of each var.
+                             Population_Density_2 = mean(df_CV_T$Population_Density_2),
+                             Percent_Own = mean(df_CV_T$Percent_Own),
+                             Percent_Own_2 = mean(df_CV_T$Percent_Own_2),
+                             Housing_Age = mean(df_CV_T$Housing_Age),
+                             Housing_Age_2 = mean(df_CV_T$Housing_Age_2), 
+                             Median_Household_Income = income.span,  # new span of income
+                             Median_Household_Income_2 = income2.span, # new span of income2
+                             Percent_White = mean(df_CV_T$Percent_White),
+                             Percent_Hispanic = mean(df_CV_T$Percent_Hispanic),
+                             Terrain_Roughness = mean(df_CV_T$Terrain_Roughness),
+                             MSA = NA) # setting MSA as neutral, so we see the mean for all MSAs
+
+# plot **predicted** housing age graph using means for other variables to visualize relationship
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.income <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.income, re.form = NA)   # this is predict.merMod 
+}
+
+df.pred.income$ml.value <- predict.fun.income(mod_4_main.boots) # run function (see 5.2.1)
+mod_4_main_boots_income <- bootMer(mod_4_main.boots, predict.fun.income, nsim = 1000)
+df.pred.income <- cbind(df.pred.income, confint(mod_4_main_boots_income))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Median_Household_Income_scale_factor <- attr(df_CV_T$Median_Household_Income, 'scaled:scale') # find scale and center factors
+Median_Household_Income_center_factor <- attr(df_CV_T$Median_Household_Income, 'scaled:center')
+Median_Household_Income_2_scale_factor <- attr(df_CV_T$Median_Household_Income_2, 'scaled:scale')
+Median_Household_Income_2_center_factor <- attr(df_CV_T$Median_Household_Income_2, 'scaled:center')
+
+# backtransform preds
+df.pred.income$Median_Household_Income_bt <- (df.pred.income$Median_Household_Income * Median_Household_Income_scale_factor + Median_Household_Income_center_factor)
+df.pred.income$Median_Household_Income_2_bt <- (df.pred.income$Median_Household_Income_2 * Median_Household_Income_2_scale_factor + Median_Household_Income_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.income$min_se <- df.pred.income$ml.value - ((df.pred.income$`97.5 %` - df.pred.income$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.income$max_se <- df.pred.income$ml.value + ((df.pred.income$`97.5 %` - df.pred.income$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.income, aes(Median_Household_Income_bt*1000, exp(ml.value))) +
+  geom_smooth(method="loess") +
+  geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) +
+  xlab('Median Household Income') + ylab('Log CV Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 600), xlim = c(0,210000))
+
+#  geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, Perc_Tree))
+
+# adds in points without controlling for anything
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, Perc_Tree))
+
+### 5.2.3.4 Median Household Income vs. P/A Ratio Trees PHX only
+
+## HOLDING OFF, CODE IS WRONG
+
+
+
 
 
 ## SAND BOX / THINGS NOT TO GET RID OF JUST YET-----
@@ -2616,7 +3622,7 @@ p_tree_mod <- glmmTMB::glmmTMB(I(Perc_Tree / 100) ~ Median_Household_Income + # 
                                  (1 | MSA),                               # random effects
                                data = df, list(family = 'beta', link = 'logit'))
 
-family = beta_family())
+family = beta_family()
 
 
 # FIXME LMER is 'wrong' because of the distribution of Perc_Tree - still need to fix this
