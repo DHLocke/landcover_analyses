@@ -46,10 +46,14 @@ lapply(packages, library, character.only = TRUE)
 # you will have to change the file path to match the location of the data
 # on your computer
 #sf <- read_sf('/Users/dlocke/temp_MSB4RoyChowdhuryDobler/CBGs/CBG_ALL_v20161014.shp') 
-sf <- read_sf('D:/Macrobio/blockgroup_landcover/CBG_ALL_v20161014.shp') # this is working for us, 
+# sf <- read_sf('F:/RA_Data/cblocks/copy/CBG_ALL_v20161014.shp') # this is working for us, 
                                                                         # but the better/ more sophistocated why is to something 
                                                                         # like this
 # https://community.rstudio.com/t/project-oriented-workflow-setwd-rm-list-ls-and-computer-fires/3549
+
+#Old path above, here is the new path as of 10/1/2020:
+sf <- read_sf('D:/Macrobio/CBGs/blockgroup_landcover/CBG_ALL_v20161014.shp')
+str(sf) # Read in properly
 
 # These data were in that folder so I could share easily with Carlos
 # but I'm keeping the R project locally here now:
@@ -853,8 +857,8 @@ for(i in seq(start_dv, end_dv)){
   ggplot2::ggsave(plot = plot_grid(p, p_qq),  # the graph we just made with plot_grid()
                   filename = paste0(getwd(), '/graphs/normality_', names(df)[i], '_',
                                     gsub('[[:punct:]]', '_', Sys.time()), '.png'),
-                  width  = 6.5, # this is  as wide as a normal Word Doc page
-                  height = 4.5, # I had to play with this A LOT to get this to look right
+                  width  = fig_w, # this is  as wide as a normal Word Doc page
+                  height = fig_h, # I had to play with this A LOT to get this to look right
                   # the Plots tab in RStudio is not representative of what the
                   # the saved version will look like
                   units = 'in')
@@ -925,8 +929,8 @@ df$Terrain_Roughness       <- scale(df$SDE_STD, center = T) # WOW, the changed n
 
 # I am REALLY lazy!
 font_sz <- 5 # font size
-fig_w   <- 6.5
-fig_h   <- 2.5
+fig_w   <- 11
+fig_h   <- 6
 fig_u   <- 'in'
 # 
 # # can you fit glm to lm data?
@@ -999,8 +1003,9 @@ mod_1_main <- mod
 p_fe <- plot_model(mod_1_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
                    type = 'est',                                # more explcit that accepting the defaults
                    show.values = TRUE,
-                   show.p = TRUE,
+                   show.p = TRUE, 
                    value.offset = .3,
+                   show.intercept = TRUE,
                    title = 'Tree Canopy Cover (%):\nfixed effects', # "\n" means "new line"
                    #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
                    vline.color = 'black') + #                        # adds the zero line back in that theme_bw() takes out
@@ -1125,6 +1130,7 @@ p_fe <- plot_model(mod_6_main,                                 # save the model 
                    type = 'est',                                    # more explcit that accepting the defaults
                    show.values = TRUE,
                    show.p = TRUE,
+                   show.intercept = TRUE,
                    value.offset = .3,
                    title = 'Grass Cover (%):\nfixed effects with Gamma distriubtion', # "\n" means "new line"
                    #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
@@ -1158,8 +1164,8 @@ p_grass_graph
 ggplot2::ggsave(plot = p_grass_graph,  # the graph we just made with plot_grid()
                 filename = paste0(getwd(), '/graphs/p_grass_mixed_effects_',
                                   gsub('[[:punct:]]', '_', Sys.time()), '.png'),
-                width  = fig_w, # this is  as wide as a normal Word Doc page
-                height = fig_h, # I had to play with this A LOT to get this to look right
+                width  = 11, # this is  as wide as a normal Word Doc page
+                height = 6, # I had to play with this A LOT to get this to look right
                 # the Plots tab in RStudio is not representative of what the
                 # the saved version will look like
                 units = fig_u)
@@ -1242,6 +1248,7 @@ p_fe <- plot_model(mod_2_main,                                 # save the model 
                    show.values = TRUE,
                    show.p = TRUE,
                    value.offset = .3,
+                   show.intercept = TRUE,
                    title = 'Log of Number of Tree Canopy Patches:\nfixed effects', # "\n" means "new line"
                    #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
                    vline.color = 'black') + #,                      # adds the zero line back in that theme_bw() takes out
@@ -1384,6 +1391,7 @@ p_fe <- plot_model(mod_3_main,                                 # save the model 
                    type = 'est',                                    # more explcit that accepting the defaults
                    show.values = TRUE,
                    show.p = TRUE,
+                   show.intercept = TRUE,
                    value.offset = .3,
                    title = 'Mean Patch Areas (Tree):\nfixed effects', # "\n" means "new line"
                    #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
@@ -1430,6 +1438,7 @@ p_fe <- plot_model(mod_3b_main,                                 # save the model
                    show.values = TRUE,
                    show.p = TRUE,
                    value.offset = .3,
+                   show.intercept = TRUE,
                    title = 'Mean Patch Areas (Tree):\nfixed effects PHOENIX ONLY', # "\n" means "new line"
                    #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
                    vline.color = 'black') + #,                      # adds the zero line back in that theme_bw() takes out
@@ -1517,6 +1526,7 @@ p_fe <- plot_model(mod_4_main,                                 # save the model 
                    show.values = TRUE,
                    show.p = TRUE,
                    value.offset = .3,
+                   show.intercept = TRUE,
                    title = 'Coef. of Variation of Tree Canopy Cover:\nfixed effects', # "\n" means "new line"
                    #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
                    vline.color = 'black') + #                        # adds the zero line back in that theme_bw() takes out
@@ -1664,6 +1674,7 @@ p_fe <- plot_model(mod_5_main,                                 # save the model 
                    show.values = TRUE,
                    show.p = TRUE,
                    value.offset = .3,
+                   show.intercept = TRUE,
                    title = 'P-A Ratio:\nfixed effects', # "\n" means "new line"
                    #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
                    vline.color = 'black') + #                        # adds the zero line back in that theme_bw() takes out
@@ -1679,7 +1690,7 @@ p_re <- plot_model(mod_5_main,                                     # save the mo
                    type = 're',                                    # more explcit that accepting the defaults
                    show.values = TRUE,
                    value.offset = .3,
-                   title = 'Tree Canopy Cover (%):\nrandom effects',# "\n" means "new line"
+                   title = 'P-A Ratio:\nrandom effects',# "\n" means "new line"
                    #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
                    vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
   theme_bw()
@@ -1709,6 +1720,7 @@ p_fe <- plot_model(mod_5b_main,                                 # save the model
                    show.values = TRUE,
                    show.p = TRUE,
                    value.offset = .3,
+                   show.intercept = TRUE,
                    title = 'P-A Ratio PHOENIX ONLY:\nfixed effects', # "\n" means "new line"
                    #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
                    vline.color = 'black') + #                        # adds the zero line back in that theme_bw() takes out
@@ -1755,12 +1767,1827 @@ tab_model(mod_1_main, mod_2_main, mod_3_main, mod_3b_main, mod_4_main, mod_5_mai
                         gsub('[[:punct:]]', '_', Sys.time()), '.html'))  # ".png" changed to ".html",
 # should open nicely in web browser
 
+# Model7main. #Absolute Tree
+mod <- lme4::lmer(Tree ~ 
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income +
+                    Median_Household_Income_2 +
+                    Percent_White +
+                    Percent_Hispanic + 
+                    Percent_Own +
+                    Terrain_Roughness +
+                    (1 | MSA),                               # random effects
+                  data = df)
+
+# lets keep this model
+mod_7_main <- mod
+
+# I think we can live with this model. 
+# graph it
+p_fe <- plot_model(mod_7_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   show.p = TRUE,
+                   show.intercept = TRUE,
+                   value.offset = .3,
+                   title = 'Absolute Tree:\nfixed effects', # "\n" means "new line"
+                   #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') + #,                      # adds the zero line back in that theme_bw() takes out
+  #axis.lim = c(.25, 1.25)) +             may want to standardize x axis            
+  theme_bw()                                                     # number pertains to font size
+
+p_fe # peak at the graph
+
+# random effects graph
+p_re <- plot_model(mod_7_main,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   value.offset = .3,
+                   title = 'Absolute Tree:\nrandom effects',# "\n" means "new line"
+                   #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw()
+
+# peak at the graph
+p_re
+
+# combine the two graphs into one two-pane graph
+Absolute_Tree_graph <- plot_grid(p_fe, # fixed effects
+                                 p_re, # random effects
+                                 labels = c('A', 'B'))
+# looks great!
+Absolute_Tree_graph
+
+# save this out
+ggplot2::ggsave(plot = Absolute_Tree_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/absolute_tree_mixed_effects_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # this is  as wide as a normal Word Doc page
+                height = fig_h, # I had to play with this A LOT to get this to look right
+                # the Plots tab in RStudio is not representative of what the
+                # the saved version will look like
+                units = fig_u)
+
+# TODO consider combining tables into one
+tab_model(mod_7_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Absolute Tree Canopy') 
+
+# lets write out the table
+tab_model(mod_7_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels = 'Absolute Tree Canopy',
+          file = paste0(getwd(), '/tables/model_fits/absolute_tree_mixed_effects_',               # see how this is now "tables"
+                        gsub('[[:punct:]]', '_', Sys.time()), '.html'))  # ".png" changed to ".html",
+# should open nicely in web browser
+
+
+# Model8main. #Absolute Grass
+mod <- lme4::lmer(Grass ~ 
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income +
+                    Median_Household_Income_2 +
+                    Percent_White +
+                    Percent_Hispanic + 
+                    Percent_Own +
+                    Terrain_Roughness +
+                    (1 | MSA),                               # random effects
+                  data = df)
+
+# lets keep this model
+mod_8_main <- mod
+
+# I think we can live with this model. 
+# graph it
+p_fe <- plot_model(mod_8_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   show.p = TRUE,
+                   value.offset = .3,
+                   show.intercept = TRUE,
+                   title = 'Absolute Grass:\nfixed effects', # "\n" means "new line"
+                   #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') + #,                      # adds the zero line back in that theme_bw() takes out
+  #axis.lim = c(.25, 1.25)) +             may want to standardize x axis            
+  theme_bw()                                                     # number pertains to font size
+
+p_fe # peak at the graph
+
+# random effects graph
+p_re <- plot_model(mod_8_main,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   value.offset = .3,
+                   title = 'Absolute Grass:\nrandom effects',# "\n" means "new line"
+                   #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw()
+
+# peak at the graph
+p_re
+
+# combine the two graphs into one two-pane graph
+Absolute_Grass_graph <- plot_grid(p_fe, # fixed effects
+                                  p_re, # random effects
+                                  labels = c('A', 'B'))
+# looks great!
+Absolute_Grass_graph
+
+# save this out
+ggplot2::ggsave(plot = Absolute_Grass_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/absolute_Grass_mixed_effects_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # this is  as wide as a normal Word Doc page
+                height = fig_h, # I had to play with this A LOT to get this to look right
+                # the Plots tab in RStudio is not representative of what the
+                # the saved version will look like
+                units = fig_u)
+
+# TODO consider combining tables into one
+tab_model(mod_8_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Absolute Grass Canopy') 
+
+# lets write out the table
+tab_model(mod_8_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels = 'Absolute Grass Canopy',
+          file = paste0(getwd(), '/tables/model_fits/absolute_grass_mixed_effects_',               # see how this is now "tables"
+                        gsub('[[:punct:]]', '_', Sys.time()), '.html'))  # ".png" changed to ".html",
+# should open nicely in web browser
+
+
+
+
+# Model9main. #Absolute Grass
+mod <- lme4::lmer(NP_G ~ 
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income +
+                    Median_Household_Income_2 +
+                    Percent_White +
+                    Percent_Hispanic + 
+                    Percent_Own +
+                    Terrain_Roughness +
+                    (1 | MSA),                               # random effects
+                  data = df)
+
+# lets keep this model
+mod_9_main <- mod
+
+# I think we can live with this model. 
+# graph it
+p_fe <- plot_model(mod_9_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   show.p = TRUE,
+                   value.offset = .3,
+                   show.intercept = TRUE,
+                   title = 'Number of Grass Patches:\nfixed effects', # "\n" means "new line"
+                   #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') + #,                      # adds the zero line back in that theme_bw() takes out
+  #axis.lim = c(.25, 1.25)) +             may want to standardize x axis            
+  theme_bw()                                                     # number pertains to font size
+
+p_fe # peak at the graph
+
+# random effects graph
+p_re <- plot_model(mod_9_main,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   value.offset = .3,
+                   title = 'Number of Grass Patches:\nrandom effects',# "\n" means "new line"
+                   #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw()
+
+# peak at the graph
+p_re
+
+# combine the two graphs into one two-pane graph
+Absolute_Grass_graph <- plot_grid(p_fe, # fixed effects
+                                  p_re, # random effects
+                                  labels = c('A', 'B'))
+# looks great!
+Absolute_Grass_graph
+
+# save this out
+ggplot2::ggsave(plot = Absolute_Grass_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/NP_G_mixed_effects_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # this is  as wide as a normal Word Doc page
+                height = fig_h, # I had to play with this A LOT to get this to look right
+                # the Plots tab in RStudio is not representative of what the
+                # the saved version will look like
+                units = fig_u)
+
+# TODO consider combining tables into one
+tab_model(mod_9_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Number of Grass Patches') 
+
+# lets write out the table
+tab_model(mod_9_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels = 'Number of Grass Patches',
+          file = paste0(getwd(), '/tables/model_fits/NP_G_mixed_effects_',               # see how this is now "tables"
+                        gsub('[[:punct:]]', '_', Sys.time()), '.html'))  # ".png" changed to ".html",
+# should open nicely in web browser
+
+
+
+
+# Model10main. #Mean Tree Patch Area
+mod <- lme4::lmer(MPA_T ~ 
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income +
+                    Median_Household_Income_2 +
+                    Percent_White +
+                    Percent_Hispanic + 
+                    Percent_Own +
+                    Terrain_Roughness +
+                    (1 | MSA),                               # random effects
+                  data = df)
+
+# lets keep this model
+mod_10_main <- mod
+
+# I think we can live with this model. 
+# graph it
+p_fe <- plot_model(mod_10_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   show.p = TRUE,
+                   value.offset = .3,
+                   show.intercept = TRUE,
+                   title = 'Mean Tree Patch Area:\nfixed effects', # "\n" means "new line"
+                   #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') + #,                      # adds the zero line back in that theme_bw() takes out
+  #axis.lim = c(.25, 1.25)) +             may want to standardize x axis            
+  theme_bw()                                                     # number pertains to font size
+
+p_fe # peak at the graph
+
+# random effects graph
+p_re <- plot_model(mod_10_main,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   value.offset = .3,
+                   title = 'Mean Tree Patch Area:\nrandom effects',# "\n" means "new line"
+                   #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw()
+
+# peak at the graph
+p_re
+
+# combine the two graphs into one two-pane graph
+MP_T_graph <- plot_grid(p_fe, # fixed effects
+                        p_re, # random effects
+                        labels = c('A', 'B'))
+# looks great!
+MP_T_graph
+
+# save this out
+ggplot2::ggsave(plot = MP_T_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/MPA_T_mixed_effects_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # this is  as wide as a normal Word Doc page
+                height = fig_h, # I had to play with this A LOT to get this to look right
+                # the Plots tab in RStudio is not representative of what the
+                # the saved version will look like
+                units = fig_u)
+
+# TODO consider combining tables into one
+tab_model(mod_10_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Mean Tree Patch Area') 
+
+# lets write out the table
+tab_model(mod_10_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels = 'Mean Tree Patch Area',
+          file = paste0(getwd(), '/tables/model_fits/MPA_T_mixed_effects_',               # see how this is now "tables"
+                        gsub('[[:punct:]]', '_', Sys.time()), '.html'))  # ".png" changed to ".html",
+# should open nicely in web browser
+
+
+# Model1main. #Mean Grass Patch Area
+mod <- lme4::lmer(MPA_G ~ 
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income +
+                    Median_Household_Income_2 +
+                    Percent_White +
+                    Percent_Hispanic + 
+                    Percent_Own +
+                    Terrain_Roughness +
+                    (1 | MSA),                               # random effects
+                  data = df)
+
+# lets keep this model
+mod_11_main <- mod
+
+# I think we can live with this model. 
+# graph it
+p_fe <- plot_model(mod_11_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   show.p = TRUE,
+                   value.offset = .3,
+                   show.intercept = TRUE,
+                   title = 'Mean Grass Patch Area:\nfixed effects', # "\n" means "new line"
+                   #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') + #,                      # adds the zero line back in that theme_bw() takes out
+  #axis.lim = c(.25, 1.25)) +             may want to standardize x axis            
+  theme_bw()                                                     # number pertains to font size
+
+p_fe # peak at the graph
+
+# random effects graph
+p_re <- plot_model(mod_11_main,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   value.offset = .3,
+                   title = 'Mean Grass Patch Area:\nrandom effects',# "\n" means "new line"
+                   #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw()
+
+# peak at the graph
+p_re
+
+# combine the two graphs into one two-pane graph
+MP_G_graph <- plot_grid(p_fe, # fixed effects
+                        p_re, # random effects
+                        labels = c('A', 'B'))
+# looks great!
+MP_G_graph
+
+# save this out
+ggplot2::ggsave(plot = MP_G_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/MPA_G_mixed_effects_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # this is  as wide as a normal Word Doc page
+                height = fig_h, # I had to play with this A LOT to get this to look right
+                # the Plots tab in RStudio is not representative of what the
+                # the saved version will look like
+                units = fig_u)
+
+# TODO consider combining tables into one
+tab_model(mod_11_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Mean Grass Patch Area') 
+
+# lets write out the table
+tab_model(mod_11_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels = 'Mean Grass Patch Area',
+          file = paste0(getwd(), '/tables/model_fits/MPA_G_mixed_effects_',               # see how this is now "tables"
+                        gsub('[[:punct:]]', '_', Sys.time()), '.html'))  # ".png" changed to ".html",
+# should open nicely in web browser
+
+
+
+# model 12 append log mean grass patch area
+mod <- lme4::lmer(MPA_G ~ 
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income +
+                    Median_Household_Income_2 +
+                    Percent_White +
+                    Percent_Hispanic + 
+                    Percent_Own +
+                    Terrain_Roughness +
+                    (1 | MSA),                               # random effects
+                  data = df)
+
+plot_model(mod, type = 'diag') # diagnostics YEah - HARD NO
+result <- check_distribution(mod); result # suggests log normal
+
+
+# taking the log requires no zeros, so lets look for those first
+df %>% filter(MPA_G > 0) %>% 
+  mutate(log_MPA_G = log(MPA_G)) -> df_MPA_G # 22 rows, less than 1%
+
+hist(df_MPA_G$log_MPA_G) # pretty
+
+mod <- lm(log_MPA_G ~ 
+            Population_Density + # fixed effects
+            Percent_Own + 
+            Housing_Age + 
+            Housing_Age_2 +
+            Median_Household_Income +
+            Median_Household_Income_2 +
+            Percent_White +
+            Percent_Hispanic + 
+            Percent_Own +
+            Terrain_Roughness +
+            (1 | MSA),                               # random effects
+          data = df_MPA_G)
+
+plot_model(mod, type = 'diag') # diagnostics YEah - HARD NO
+result <- check_distribution(mod); result # suggests log normal
+
+# Model2main. #Tree Patches
+# lets keep this model
+mod_12_main <- mod
+
+# I think we can live with this model. 
+# graph it
+p_fe <- plot_model(mod_12_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   show.p = TRUE,
+                   value.offset = .3,
+                   show.intercept = TRUE,
+                   title = 'Log Mean Grass Patch Area:\nfixed effects', # "\n" means "new line"
+                   #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') + #,                      # adds the zero line back in that theme_bw() takes out
+  #axis.lim = c(.25, 1.25)) +             may want to standardize x axis            
+  theme_bw()                                                     # number pertains to font size
+
+p_fe # peak at the graph
+
+# random effects graph
+p_re <- plot_model(mod_12_main,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   value.offset = .3,
+                   title = 'Log Mean Grass Patch Area:\nrandom effects',# "\n" means "new line"
+                   #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw()
+
+# peak at the graph
+p_re
+
+# combine the two graphs into one two-pane graph
+log_MPA_G_graph <- plot_grid(p_fe, # fixed effects
+                             p_re, # random effects
+                             labels = c('A', 'B'))
+# looks great!
+log_MPA_G_graph
+
+# save this out
+ggplot2::ggsave(plot = log_MPA_G_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/log_MPA_G_mixed_effects_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # this is  as wide as a normal Word Doc page
+                height = fig_h, # I had to play with this A LOT to get this to look right
+                # the Plots tab in RStudio is not representative of what the
+                # the saved version will look like
+                units = fig_u)
+
+# TODO consider combining tables into one
+tab_model(mod_12_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Log Mean Grass Patch Area') 
+
+# lets write out the table
+tab_model(mod_12_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels = 'Log Mean Grass Patch Area',
+          file = paste0(getwd(), '/tables/model_fits/log_MPA_G_mixed_effects_',               # see how this is now "tables"
+                        gsub('[[:punct:]]', '_', Sys.time()), '.html'))  # ".png" changed to ".html",
+# should open nicely in web browser
+
+
+
+# model 13 append log Number of Grass Patches
+mod <- lme4::lmer(NP_G ~ 
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income +
+                    Median_Household_Income_2 +
+                    Percent_White +
+                    Percent_Hispanic + 
+                    Percent_Own +
+                    Terrain_Roughness +
+                    (1 | MSA),                               # random effects
+                  data = df)
+
+plot_model(mod, type = 'diag') # diagnostics YEah - HARD NO
+result <- check_distribution(mod); result # suggests log normal
+
+
+# taking the log requires no zeros, so lets look for those first
+df %>% filter(NP_G > 0) %>% 
+  mutate(log_NP_G = log(NP_G)) -> df_NP_G # 22 rows, less than 1%
+
+hist(df_NP_G$log_NP_G) # pretty
+
+mod <- lm(log_NP_G ~ 
+            Population_Density + # fixed effects
+            Percent_Own + 
+            Housing_Age + 
+            Housing_Age_2 +
+            Median_Household_Income +
+            Median_Household_Income_2 +
+            Percent_White +
+            Percent_Hispanic + 
+            Percent_Own +
+            Terrain_Roughness +
+            (1 | MSA),                               # random effects
+          data = df_NP_G)
+
+plot_model(mod, type = 'diag') # diagnostics YEah - HARD NO
+result <- check_distribution(mod); result # suggests log normal
+
+result
+
+mod_13_append <- mod
+summary(mod_13_append)
+
+
+tab_model(mod_13_append,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Log NP Grass') 
+
+# Model2main. #Tree Patches
+# lets keep this model
+mod_13_main <- mod
+
+# I think we can live with this model. 
+# graph it
+p_fe <- plot_model(mod_13_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   show.p = TRUE,
+                   value.offset = .3,
+                   show.intercept = TRUE,
+                   title = 'Log Number of Grass Patches:\nfixed effects', # "\n" means "new line"
+                   #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') + #,                      # adds the zero line back in that theme_bw() takes out
+  #axis.lim = c(.25, 1.25)) +             may want to standardize x axis            
+  theme_bw()                                                     # number pertains to font size
+
+p_fe # peak at the graph
+
+# random effects graph
+p_re <- plot_model(mod_13_main,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   value.offset = .3,
+                   title = 'Log Number of Grass Patches:\nrandom effects',# "\n" means "new line"
+                   #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw()
+
+# peak at the graph
+p_re
+
+# combine the two graphs into one two-pane graph
+log_NP_G_graph <- plot_grid(p_fe, # fixed effects
+                            p_re, # random effects
+                            labels = c('A', 'B'))
+# looks great!
+log_NP_G_graph
+
+# save this out
+ggplot2::ggsave(plot = log_NP_G_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/log_NP_G_mixed_effects_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # this is  as wide as a normal Word Doc page
+                height = fig_h, # I had to play with this A LOT to get this to look right
+                # the Plots tab in RStudio is not representative of what the
+                # the saved version will look like
+                units = fig_u)
+
+# TODO consider combining tables into one
+tab_model(mod_13_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Log Number of Grass Patches') 
+
+# lets write out the table
+tab_model(mod_13_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels = 'Log Number of Grass Patches',
+          file = paste0(getwd(), '/tables/model_fits/log_NP_G_mixed_effects_',               # see how this is now "tables"
+                        gsub('[[:punct:]]', '_', Sys.time()), '.html'))  # ".png" changed to ".html",
+# should open nicely in web browser
+
+
+
+# Model4main CV Grass Area
+# lets keep this model
+mod <- lme4::lmer(CV_G ~ 
+                     Population_Density + # fixed effects
+                     Percent_Own + 
+                     Percent_Own_2 + 
+                     Housing_Age + 
+                     Housing_Age_2 +
+                     Median_Household_Income + 
+                     Median_Household_Income_2 + 
+                     Percent_White +
+                     Percent_Hispanic + 
+                     Terrain_Roughness +
+                     (1 | MSA),                               # random effects
+                   data = df) 
+
+mod_14_main <- mod
+
+# I think we can live with this model. 
+# graph it
+p_fe <- plot_model(mod_14_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   show.p = TRUE,
+                   value.offset = .3,
+                   show.intercept = TRUE,
+                   title = 'Coef. of Variation of Grass Cover:\nfixed effects', # "\n" means "new line"
+                   #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') + #                        # adds the zero line back in that theme_bw() takes out
+  #axis.lim = c(.25, 1.25)) +             may want to standardize x axis            
+  theme_bw()                                                     # number pertains to font size
+
+
+p_fe # peak at the graph
+# FIXME the order of the fixed effects so tehy are consistent across models see help(plot_model) and order.terms / terms/ related..
+
+# random effects graph
+p_re <- plot_model(mod_14_main,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   value.offset = .3,
+                   title = 'Coef. of Variation of Grass Cover:\nrandom effects',# "\n" means "new line"
+                   #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw()
+
+# peak at the graph
+p_re
+
+
+# combine the two graphs into one two-pane graph
+cv_tree_graph <- plot_grid(p_fe, # fixed effects
+                           p_re, # random effects
+                           labels = c('A', 'B'))
+# looks great!
+cv_tree_graph
+
+# save this out
+ggplot2::ggsave(plot = cv_tree_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/cv_grass_cover_mixed_effects_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # this is  as wide as a normal Word Doc page
+                height = fig_h, # I had to play with this A LOT to get this to look right
+                # the Plots tab in RStudio is not representative of what the
+                # the saved version will look like
+                units = fig_u)
+
+# TODO consider combining tables into one
+tab_model(mod_14_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'CV Grass Cover') 
+
+# lets write out the table
+tab_model(mod_14_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels = 'CV Grass Cover',
+          file = paste0(getwd(), '/tables/model_fits/CV_grass_canopy_',               # see how this is now "tables"
+                        gsub('[[:punct:]]', '_', Sys.time()), '.html'))  # ".png" changed to ".html",
+# should open nicely in web browser
+
+
+
+# model 15 append logP/A Ratio of Grass Patches
+mod <- lme4::lmer(PAratio_G ~ 
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income +
+                    Median_Household_Income_2 +
+                    Percent_White +
+                    Percent_Hispanic + 
+                    Percent_Own +
+                    Terrain_Roughness +
+                    (1 | MSA),                               # random effects
+                  data = df)
+
+plot_model(mod, type = 'diag') # diagnostics YEah - HARD NO
+result <- check_distribution(mod); result # suggests log normal
+
+
+# taking the log requires no zeros, so lets look for those first
+df %>% filter(PAratio_G > 0) %>% 
+  mutate(log_PAratio_G = log(PAratio_G)) -> df_PAratio_G # 22 rows, less than 1%
+
+hist(df_PAratio_G$log_PAratio_G) # pretty
+
+mod <- lm(log_PAratio_G ~ 
+            Population_Density + # fixed effects
+            Percent_Own + 
+            Housing_Age + 
+            Housing_Age_2 +
+            Median_Household_Income +
+            Median_Household_Income_2 +
+            Percent_White +
+            Percent_Hispanic + 
+            Percent_Own +
+            Terrain_Roughness +
+            (1 | MSA),                               # random effects
+          data = df_PAratio_G)
+
+plot_model(mod, type = 'diag') # diagnostics YEah - HARD NO
+result <- check_distribution(mod); result # suggests log normal
+
+# Model2main. #Tree Patches
+# lets keep this model
+mod_15_main <- mod
+
+# I think we can live with this model. 
+# graph it
+p_fe <- plot_model(mod_15_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
+                   type = 'est',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   show.p = TRUE,
+                   show.intercept = TRUE,
+                   value.offset = .3,
+                   title = 'Log P-A Ratio Grass:\nfixed effects', # "\n" means "new line"
+                   #sort.est = TRUE,                                 # need to decide if consistent order is better than sorted
+                   vline.color = 'black') + #,                      # adds the zero line back in that theme_bw() takes out
+  #axis.lim = c(.25, 1.25)) +             may want to standardize x axis            
+  theme_bw()                                                     # number pertains to font size
+
+p_fe # peak at the graph
+
+# random effects graph
+p_re <- plot_model(mod_15_main,                                     # save the model in "p_re", short for Plot RANDOM Effects
+                   type = 're',                                    # more explcit that accepting the defaults
+                   show.values = TRUE,
+                   value.offset = .3,
+                   title = 'Log P-A Ratio Grass:\nrandom effects',# "\n" means "new line"
+                   #sort.est = 'sort.all,                                # need to decide if consistent order is better than sorted
+                   vline.color = 'black') +                         # adds the zero line back in that theme_bw() takes out                              
+  theme_bw()
+
+# peak at the graph
+p_re
+
+# combine the two graphs into one two-pane graph
+log_PAratio_G_graph <- plot_grid(p_fe, # fixed effects
+                                 p_re, # random effects
+                                 labels = c('A', 'B'))
+# looks great!
+log_PAratio_G_graph
+
+# save this out
+ggplot2::ggsave(plot = log_PAratio_G_graph,  # the graph we just made with plot_grid()
+                filename = paste0(getwd(), '/graphs/log_PAratio_G_Graph_mixed_effects_',
+                                  gsub('[[:punct:]]', '_', Sys.time()), '.png'),
+                width  = fig_w, # this is  as wide as a normal Word Doc page
+                height = fig_h, # I had to play with this A LOT to get this to look right
+                # the Plots tab in RStudio is not representative of what the
+                # the saved version will look like
+                units = fig_u)
+
+# TODO consider combining tables into one
+tab_model(mod_15_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels= 'Log PAratio Grass') 
+
+# lets write out the table
+tab_model(mod_15_main,
+          ci.hyphen = ' to ',
+          show.ngroups = TRUE,
+          dv.labels = 'Log PAratio Grass',
+          file = paste0(getwd(), '/tables/model_fits/log_PAratio_G_mixed_effects_',               # see how this is now "tables"
+                        gsub('[[:punct:]]', '_', Sys.time()), '.html'))  # ".png" changed to ".html",
+# should open nicely in web browser
 
 
 # NP_G           # Number of Patches Grass
 # MPA_G          # Mean Patch Area Grass
 # CV_G           # TODO find out Coefficient of Variation for tree patches
 # PAratio_G      # Parimieter Area ratio for tree canopy
+
+
+### 5.2. Generate prediction graphs of individual predictors for interpretation----
+
+### 5.2.1 Housing age + housing age^2-----
+
+### 5.2.1.1 % Tree Cover by housing age
+
+# generate new data for housing age to plot predicted values
+
+housing.span <- c(rep(seq(min(df$Housing_Age),max(df$Housing_Age), length=50))) # generate new data
+housing2.span <- (housing.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+df.pred.housing <- data.frame(Population_Density = mean(df$Population_Density), # means of each var.
+                              Percent_Own = mean(df$Percent_Own),
+                              Percent_Own_2 = mean(df$Percent_Own_2),
+                              Housing_Age = housing.span, # new span of housing age
+                              Housing_Age_2 = housing2.span, # new span of housing age
+                              Median_Household_Income = mean(df$Median_Household_Income),
+                              Median_Household_Income_2 = mean(df$Median_Household_Income_2),
+                              Percent_White = mean(df$Percent_White),
+                              Percent_Hispanic = mean(df$Percent_Hispanic),
+                              Terrain_Roughness = mean(df$Terrain_Roughness),
+                              MSA = NA) # setting MSA as neutral, so we see the mean for all MSAs
+
+# plot **predicted** housing age graph using means for other variables to visualize relationship
+
+# here's the model again
+
+mod_1_main.boots <- lme4::lmer(Perc_Tree ~
+                                 Population_Density + # fixed effects
+                                 Percent_Own + 
+                                 Percent_Own_2 + 
+                                 Housing_Age + 
+                                 Housing_Age_2 +
+                                 Median_Household_Income + 
+                                 Median_Household_Income_2 + 
+                                 Percent_White +
+                                 Percent_Hispanic + 
+                                 Terrain_Roughness +
+                                 (1 | MSA),                               # random effects
+                               data = df)
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.housing <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.housing, re.form = NA)   # this is predict.merMod 
+}
+
+df.pred.housing$ml.value <- predict.fun.housing(mod_1_main) # run function (see 5.2.1)
+mod_1_main_boots_housing <- bootMer(mod_1_main, predict.fun.housing, nsim = 1000)
+df.pred.housing <- cbind(df.pred.housing, confint(mod_1_main_boots_housing))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Housing_Age_scale_factor <- attr(df$Housing_Age, 'scaled:scale') # 16.92731 find scale and center factors
+Housing_Age_center_factor <- attr(df$Housing_Age, 'scaled:center') # 32.85529
+Housing_Age_2_scale_factor <- attr(df$Housing_Age_2, 'scaled:scale') # 1179.27054
+Housing_Age_2_center_factor <- attr(df$Housing_Age_2, 'scaled:center') # 1365.94922
+
+# backtransform preds
+df.pred.housing$Housing_Age_bt <- (df.pred.housing$Housing_Age * Housing_Age_scale_factor + Housing_Age_center_factor)
+df.pred.housing$Housing_Age_2_bt <- (df.pred.housing$Housing_Age_2 * Housing_Age_2_scale_factor + Housing_Age_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.housing$min_se <- df.pred.housing$ml.value - ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.housing$max_se <- df.pred.housing$ml.value + ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.housing, aes(Housing_Age_bt, ml.value)) +
+  geom_smooth(method="loess") +
+  geom_ribbon(aes(ymin = min_se, ymax = max_se), alpha = 0.2) +
+  xlab('Housing Age in Years') + ylab('Model Predicted Percent Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 35), xlim = c(0,60))
+
+#  geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, Perc_Tree))
+
+# adds in points without controlling for anything
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, Perc_Tree))
+
+### 5.2.1.2 Log NP Tree Canopy by housing age
+
+# generate new data for housing age to plot predicted values
+
+housing.span <- c(rep(seq(min(df$Housing_Age),max(df$Housing_Age), length=50))) # generate new data
+housing2.span <- (housing.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+df.pred.housing <- data.frame(Population_Density = mean(df$Population_Density), # means of each var.
+                              Percent_Own = mean(df$Percent_Own),
+                              Percent_Own_2 = mean(df$Percent_Own_2),
+                              Housing_Age = housing.span, # new span of housing age
+                              Housing_Age_2 = housing2.span, # new span of housing age
+                              Median_Household_Income = mean(df$Median_Household_Income),
+                              Median_Household_Income_2 = mean(df$Median_Household_Income_2),
+                              Percent_White = mean(df$Percent_White),
+                              Percent_Hispanic = mean(df$Percent_Hispanic),
+                              Terrain_Roughness = mean(df$Terrain_Roughness),
+                              MSA = NA) # setting MSA as neutral, so we see the mean for all MSAs
+
+# taking the log requires no zeros, so lets look for those first
+df %>% filter(NP_T > 0) %>% 
+  mutate(log_NP_T = log(NP_T)) -> df_NP_T # 22 rows, less than 1%
+
+mod_2_main.boots <- lme4::lmer(log_NP_T ~ 
+                                 Population_Density + # fixed effects
+                                 Percent_Own + 
+                                 Housing_Age + 
+                                 Housing_Age_2 +
+                                 Median_Household_Income +
+                                 Median_Household_Income_2 +
+                                 Percent_White +
+                                 Percent_Hispanic + 
+                                 Percent_Own +
+                                 Terrain_Roughness +
+                                 (1 | MSA),                               # random effects
+                               data = df_NP_T)
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.housing <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.housing, re.form = NA)   # this is predict.merMod 
+}
+
+df.pred.housing$ml.value <- predict.fun.housing(mod_2_main.boots) # run function (see 5.2.1)
+mod_2_main_boots_housing <- bootMer(mod_2_main, predict.fun.housing, nsim = 1000)
+df.pred.housing <- cbind(df.pred.housing, confint(mod_2_main_boots_housing))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Housing_Age_scale_factor <- attr(df$Housing_Age, 'scaled:scale') # 16.92731 find scale and center factors
+Housing_Age_center_factor <- attr(df$Housing_Age, 'scaled:center') # 32.85529
+Housing_Age_2_scale_factor <- attr(df$Housing_Age_2, 'scaled:scale') # 1179.27054
+Housing_Age_2_center_factor <- attr(df$Housing_Age_2, 'scaled:center') # 1365.94922
+
+# backtransform preds
+df.pred.housing$Housing_Age_bt <- (df.pred.housing$Housing_Age * Housing_Age_scale_factor + Housing_Age_center_factor)
+df.pred.housing$Housing_Age_2_bt <- (df.pred.housing$Housing_Age_2 * Housing_Age_2_scale_factor + Housing_Age_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.housing$min_se <- df.pred.housing$ml.value - ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.housing$max_se <- df.pred.housing$ml.value + ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.housing, aes(Housing_Age_bt, exp(ml.value))) + #transform out of log
+  geom_smooth(method="loess") +
+  geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) + #transform se out of log
+  xlab('Housing Age in Years') + ylab('NP Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 10000), xlim = c(0,60))
+
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, log(NP_T)))
+# adds in points without controlling for anything
+
+
+### 5.2.1.3 MPA Tree Canopy w/ and w/o PHX by housing age
+
+### 5.2.1.3.1 w/o PHX
+
+#Models again...
+
+df %>% filter(MPA_T > 0) -> df_MPA_T # just 22 rows (<1%) dropped
+
+df_MPA_T %>% filter(MSA == 'PHX') -> df_MPA_T_PHX  # PHOENIX data
+df_MPA_T %>% filter(MSA != 'PHX') -> df_MPA_T_OTH  # all other data
+
+mod <- lme4::glmer(MPA_T ~ 
+                     Population_Density + # fixed effects
+                     Percent_Own + 
+                     #Percent_Own_2 + 
+                     Housing_Age + 
+                     Housing_Age_2 +
+                     Median_Household_Income + 
+                     Median_Household_Income_2 + 
+                     Percent_White +
+                     Percent_Hispanic + 
+                     Terrain_Roughness +
+                     (1 | MSA),                               # random effects
+                   data = df_MPA_T_OTH, 
+                   family=Gamma(link="log")) # family of glm
+
+plot_model(mod, type = 'diag') # diagnostics
+result <- check_distribution(mod); result # VERY BAD
+# I think we can live with this model. 
+
+# # Model3main. Tree MPA
+# lets keep this model
+mod_3_main.boots <- mod
+
+
+mod.phx <- glm(MPA_T ~ # note this is NOT a mixed model
+                 Population_Density + # fixed effects
+                 Percent_Own + 
+                 #Percent_Own_2 + 
+                 Housing_Age + 
+                 Housing_Age_2 +
+                 Median_Household_Income + 
+                 Median_Household_Income_2 + 
+                 Percent_White +
+                 Percent_Hispanic + 
+                 Terrain_Roughness, # +
+               #(1 | MSA),                               # random effects TURNED OFF
+               data = df_MPA_T_PHX, 
+               family=Gamma(link="log")) # family of glm
+
+# TODO figure out why this doesn't work
+plot_model(mod.phx, type = 'diag') # diagnostics 
+result <- check_distribution(mod.phx); result # VERY BAD
+# I think we can live with this model. 
+df_MPA_T$MSA
+# # Model3main. Tree MPA
+# lets keep this model
+mod_3b_main.boots <- mod.phx
+summary(mod_3_main.boots)
+
+# generate new data for housing age to plot predicted values
+
+#Note that for this particular model, the df is now df_MPA_T_PHX for each
+housing.span <- c(rep(seq(min(df_MPA_T_OTH$Housing_Age), max(df_MPA_T_OTH$Housing_Age), length=50))) # generate new data
+housing2.span <- (housing.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+#Note that for this particular model, the df is now df_MPA_T_PHX for each
+
+df.pred.housing <- data.frame(Population_Density = mean(df_MPA_T_OTH$Population_Density), # means of each var.
+                              Percent_Own = mean(df_MPA_T_OTH$Percent_Own),
+                             # Percent_Own_2 = mean(df_MPA_T_OTH$Percent_Own_2),
+                              Housing_Age = housing.span, # new span of housing age
+                              Housing_Age_2 = housing2.span, # new span of housing age
+                              Median_Household_Income = mean(df_MPA_T_OTH$Median_Household_Income),
+                              Median_Household_Income_2 = mean(df_MPA_T_OTH$Median_Household_Income_2),
+                              Percent_White = mean(df_MPA_T_OTH$Percent_White),
+                              Percent_Hispanic = mean(df_MPA_T_OTH$Percent_Hispanic),
+                             Terrain_Roughness = mean(df_MPA_T_OTH$Terrain_Roughness),
+                             MSA = NA) #Specified an MSA ("MSP")
+
+df_MPA_T_OTH$MSA
+                               
+str(df_MPA_T_PHX$Population_Density) #num
+str(df_MPA_T_PHX$Percent_Own) #num
+str(df_MPA_T_PHX$Housing_Age) #num
+str(df_MPA_T_PHX$Housing_Age_2) #num
+str(df_MPA_T_PHX$Median_Household_Income) #num
+str(df_MPA_T_PHX$Median_Household_Income_2) #num
+str(df_MPA_T_PHX$Percent_White) #num
+str(df_MPA_T_PHX$Percent_Hispanic) #num
+str(df_MPA_T_PHX$Terrain_Roughness) #num
+
+str(df.pred.housing)
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.housing <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.housing, re.form = NA)   # this is predict.glm, not for mixed models
+}
+
+df.pred.housing$ml.value <- predict.fun.housing(mod_3_main.boots) # run function (see 5.2.1)
+mod_3_main_boots_housing <- bootMer(mod_3_main.boots, predict.fun.housing, nsim = 100) #Running 100 for now start 1:31
+df.pred.housing <- cbind(df.pred.housing, confint(mod_3_main_boots_housing))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Housing_Age_scale_factor <- attr(df$Housing_Age, 'scaled:scale') # 16.92731 find scale and center factors
+Housing_Age_center_factor <- attr(df$Housing_Age, 'scaled:center') # 32.85529
+Housing_Age_2_scale_factor <- attr(df$Housing_Age_2, 'scaled:scale') # 1179.27054
+Housing_Age_2_center_factor <- attr(df$Housing_Age_2, 'scaled:center') # 1365.94922
+
+# backtransform preds
+df.pred.housing$Housing_Age_bt <- (df.pred.housing$Housing_Age * Housing_Age_scale_factor + Housing_Age_center_factor)
+df.pred.housing$Housing_Age_2_bt <- (df.pred.housing$Housing_Age_2 * Housing_Age_2_scale_factor + Housing_Age_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.housing$min_se <- df.pred.housing$ml.value - ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.housing$max_se <- df.pred.housing$ml.value + ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.housing, aes(Housing_Age_bt, exp(ml.value))) + #transform out of log
+  geom_smooth(method="loess") +
+ # geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) + #transform se out of log
+  xlab('Housing Age in Years') + ylab('MPA Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 0.15), xlim = c(0,60))
+
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, log(NP_T)))
+# adds in points without controlling for anything
+
+### 5.2.1.3.1 PHX Only
+
+# FIXME Getting error when running predict.glm with newdata (error: variables were specified with different types from the fit)
+
+#Models again...
+
+df %>% filter(MPA_T > 0) -> df_MPA_T # just 22 rows (<1%) dropped
+
+df_MPA_T %>% filter(MSA == 'PHX') -> df_MPA_T_PHX  # PHOENIX data
+df_MPA_T %>% filter(MSA != 'PHX') -> df_MPA_T_OTH  # all other data
+
+mod.phx <- glm(MPA_T ~ # note this is NOT a mixed model
+                 Population_Density + # fixed effects
+                 Percent_Own + 
+                 #Percent_Own_2 + 
+                 Housing_Age + 
+                 Housing_Age_2 +
+                 Median_Household_Income + 
+                 Median_Household_Income_2 + 
+                 Percent_White +
+                 Percent_Hispanic + 
+                 Terrain_Roughness, # +
+               #(1 | MSA),                               # random effects TURNED OFF
+               data = df_MPA_T_PHX, 
+               family=Gamma(link="log")) # family of glm
+
+summary(mod.phx)
+
+# TODO figure out why this doesn't work
+plot_model(mod.phx, type = 'diag') # diagnostics 
+result <- check_distribution(mod.phx); result # VERY BAD
+# I think we can live with this model. 
+
+# # Model3main. Tree MPA
+# lets keep this model
+mod_3b_main.boots <- mod.phx
+summary(mod_3b_main.boots)
+
+# generate new data for housing age to plot predicted values
+
+#Note that for this particular model, the df is now df_MPA_T_PHX for each
+housing.span <- c(rep(seq(min(df_MPA_T_PHX$Housing_Age), max(df_MPA_T_PHX$Housing_Age), length=50))) # generate new data
+housing2.span <- (housing.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+#Note that for this particular model, the df is now df_MPA_T_PHX for each
+
+df.pred.housing.glm <- data.frame(Population_Density = as.numeric(mean(df_MPA_T_PHX$Population_Density)), # means of each var.
+                              Percent_Own = as.numeric(mean(df_MPA_T_PHX$Percent_Own)),
+                              # Percent_Own_2 = as.numeric(mean(df_MPA_T_PHX$Percent_Own_2)),
+                              Housing_Age = as.numeric(housing.span), # new span of housing age
+                              Housing_Age_2 = as.numeric(housing2.span), # new span of housing age
+                              Median_Household_Income = as.numeric(mean(df_MPA_T_PHX$Median_Household_Income)),
+                              Median_Household_Income_2 = as.numeric(mean(df_MPA_T_PHX$Median_Household_Income_2)),
+                              Percent_White = as.numeric(mean(df_MPA_T_PHX$Percent_White)),
+                              Percent_Hispanic = as.numeric(mean(df_MPA_T_PHX$Percent_Hispanic)),
+                              Terrain_Roughness = as.numeric(mean(df_MPA_T_PHX$Terrain_Roughness))) #,
+                            # MSA = NA) # No mixed effects in this model
+
+str(df_MPA_T_PHX$Population_Density) #num
+str(df_MPA_T_PHX$Percent_Own) #num
+str(df_MPA_T_PHX$Housing_Age) #num
+str(df_MPA_T_PHX$Housing_Age_2) #num
+str(df_MPA_T_PHX$Median_Household_Income) #num
+str(df_MPA_T_PHX$Median_Household_Income_2) #num
+str(df_MPA_T_PHX$Percent_White) #num
+str(df_MPA_T_PHX$Percent_Hispanic) #num
+str(df_MPA_T_PHX$Terrain_Roughness) #num
+
+str(df.pred.housing) #data frame with all numeric variables
+str(df_MPA_T_PHX) #data frame with all numeric variables (for variables above)
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.housing <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.housing.glm)   # this is predict.glm, not for mixed models
+}
+
+df.pred.housing$ml.value <- predict.fun.housing(mod_3b_main.boots) # run function (see 5.2.1)
+mod_3b_main_boots_housing <- bootMer(mod_3b_main.boots, predict.fun.housing, nsim = 100) #Running 100 for now start 1:31
+df.pred.housing <- cbind(df.pred.housing, confint(mod_3b_main_boots_housing))
+
+predict(mod_3b_main.boots, newdata = df.pred.housing.glm)
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Housing_Age_scale_factor <- attr(df$Housing_Age, 'scaled:scale') # 16.92731 find scale and center factors
+Housing_Age_center_factor <- attr(df$Housing_Age, 'scaled:center') # 32.85529
+Housing_Age_2_scale_factor <- attr(df$Housing_Age_2, 'scaled:scale') # 1179.27054
+Housing_Age_2_center_factor <- attr(df$Housing_Age_2, 'scaled:center') # 1365.94922
+
+# backtransform preds
+df.pred.housing$Housing_Age_bt <- (df.pred.housing$Housing_Age * Housing_Age_scale_factor + Housing_Age_center_factor)
+df.pred.housing$Housing_Age_2_bt <- (df.pred.housing$Housing_Age_2 * Housing_Age_2_scale_factor + Housing_Age_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.housing$min_se <- df.pred.housing$ml.value - ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.housing$max_se <- df.pred.housing$ml.value + ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.housing, aes(Housing_Age_bt, exp(ml.value))) + #transform out of log
+  geom_smooth(method="loess") +
+  # geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) + #transform se out of log
+  xlab('Housing Age in Years') + ylab('MPA Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 0.15), xlim = c(0,60))
+
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, log(NP_T)))
+# adds in points without controlling for anything
+
+
+### 5.2.1.4 C/V Tree Canopy by housing age
+
+df %>% filter(CV_T > 0) -> df_CV_T
+
+mod_4_main.boots <- lme4::lmer(log(CV_T) ~ 
+                                 Population_Density + # fixed effects
+                                 I(Population_Density*Population_Density) +
+                                 Percent_Own + 
+                                 Percent_Own_2 + 
+                                 Housing_Age + 
+                                 Housing_Age_2 +
+                                 Median_Household_Income + 
+                                 Median_Household_Income_2 + 
+                                 Percent_White +
+                                 Percent_Hispanic + 
+                                 Terrain_Roughness +
+                                 (1 | MSA),                               # random effects
+                               data = df_CV_T)
+
+
+# generate new data for housing age to plot predicted values
+
+housing.span <- c(rep(seq(min(df_CV_T$Housing_Age),max(df_CV_T$Housing_Age), length=50))) # generate new data
+housing2.span <- (housing.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+df.pred.housing <- data.frame(Population_Density = mean(df_CV_T$Population_Density), # means of each var.
+                              Percent_Own = mean(df_CV_T$Percent_Own),
+                              Percent_Own_2 = mean(df_CV_T$Percent_Own_2),
+                              Housing_Age = housing.span, # new span of housing age
+                              Housing_Age_2 = housing2.span, # new span of housing age
+                              Median_Household_Income = mean(df_CV_T$Median_Household_Income),
+                              Median_Household_Income_2 = mean(df_CV_T$Median_Household_Income_2),
+                              Percent_White = mean(df_CV_T$Percent_White),
+                              Percent_Hispanic = mean(df_CV_T$Percent_Hispanic),
+                              Terrain_Roughness = mean(df_CV_T$Terrain_Roughness),
+                              MSA = NA) # setting MSA as neutral, so we see the mean for all MSAs
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.housing <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.housing, re.form = NA)   # this is predict.merMod 
+}
+
+df.pred.housing$ml.value <- predict.fun.housing(mod_4_main.boots) # run function (see 5.2.1)
+mod_4_main_boots_housing <- bootMer(mod_4_main.boots, predict.fun.housing, nsim = 1000)
+df.pred.housing <- cbind(df.pred.housing, confint(mod_4_main_boots_housing))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Housing_Age_scale_factor <- attr(df_CV_T$Housing_Age, 'scaled:scale') # 16.92731 find scale and center factors
+Housing_Age_center_factor <- attr(df_CV_T$Housing_Age, 'scaled:center') # 32.85529
+Housing_Age_2_scale_factor <- attr(df_CV_T$Housing_Age_2, 'scaled:scale') # 1179.27054
+Housing_Age_2_center_factor <- attr(df_CV_T$Housing_Age_2, 'scaled:center') # 1365.94922
+
+# backtransform preds
+df.pred.housing$Housing_Age_bt <- (df.pred.housing$Housing_Age * Housing_Age_scale_factor + Housing_Age_center_factor)
+df.pred.housing$Housing_Age_2_bt <- (df.pred.housing$Housing_Age_2 * Housing_Age_2_scale_factor + Housing_Age_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.housing$min_se <- df.pred.housing$ml.value - ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.housing$max_se <- df.pred.housing$ml.value + ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.housing, aes(Housing_Age_bt, exp(ml.value))) + #transform out of log
+  geom_smooth(method="loess") +
+  geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) + #transform se out of log
+  xlab('Housing Age in Years') + ylab('C/V Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 600), xlim = c(0,60))
+
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, log(NP_T)))
+# adds in points without controlling for anything
+
+### 5.2.1.5 P/A Ratio Tree Canopy w/ and w/o PHX by housing age
+
+# cant log zeros.. count first
+df %>% filter(PAratio_T > 0) %>% 
+  mutate(log_PAratio_T = log(PAratio_T)) -> df_PAratio_T # again only dropped a few (20) rows
+
+df_PAratio_T %>% filter(MSA == 'PHX') -> df_PAratio_T_PHX  # PHOENIX data
+df_PAratio_T %<>% filter(MSA != 'PHX')                 # all other data
+
+mod <- lme4::lmer(log_PAratio_T ~
+                    Population_Density + # fixed effects
+                    Percent_Own + 
+                    # Percent_Own_2 + 
+                    Housing_Age + 
+                    Housing_Age_2 +
+                    Median_Household_Income + 
+                    Median_Household_Income_2 + 
+                    Percent_White +
+                    Percent_Hispanic + 
+                    Terrain_Roughness +
+                    (1 | MSA),                               # random effects
+                  data = df_PAratio_T)
+
+mod_5_main.boots <- mod
+summary(mod_5_main.boots)
+
+# generate new data for housing age to plot predicted values
+
+housing.span <- c(rep(seq(min(df_PAratio_T$Housing_Age),max(df_PAratio_T$Housing_Age), length=50))) # generate new data
+housing2.span <- (housing.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+df.pred.housing <- data.frame(Population_Density = mean(df_PAratio_T$Population_Density), # means of each var.
+                              Percent_Own = mean(df_PAratio_T$Percent_Own),
+                            # Percent_Own_2 = mean(df_PAratio_T$Percent_Own_2),
+                              Housing_Age = housing.span, # new span of housing age
+                              Housing_Age_2 = housing2.span, # new span of housing age
+                              Median_Household_Income = mean(df_PAratio_T$Median_Household_Income),
+                              Median_Household_Income_2 = mean(df_PAratio_T$Median_Household_Income_2),
+                              Percent_White = mean(df_PAratio_T$Percent_White),
+                              Percent_Hispanic = mean(df_PAratio_T$Percent_Hispanic),
+                              Terrain_Roughness = mean(df_PAratio_T$Terrain_Roughness),
+                              MSA = NA) # setting MSA as neutral, so we see the mean for all MSAs
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.housing <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.housing, re.form = NA)   # this is predict.merMod 
+}
+
+df.pred.housing$ml.value <- predict.fun.housing(mod_5_main.boots) # run function (see 5.2.1)
+mod_5_main_boots_housing <- bootMer(mod_5_main.boots, predict.fun.housing, nsim = 1000)
+df.pred.housing <- cbind(df.pred.housing, confint(mod_5_main_boots_housing))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Housing_Age_scale_factor <- attr(df_PAratio_T$Housing_Age, 'scaled:scale') # find scale and center factors
+Housing_Age_center_factor <- attr(df_PAratio_T$Housing_Age, 'scaled:center')
+Housing_Age_2_scale_factor <- attr(df_PAratio_T$Housing_Age_2, 'scaled:scale')
+Housing_Age_2_center_factor <- attr(df_PAratio_T$Housing_Age_2, 'scaled:center')
+
+# backtransform preds
+df.pred.housing$Housing_Age_bt <- (df.pred.housing$Housing_Age * Housing_Age_scale_factor + Housing_Age_center_factor)
+df.pred.housing$Housing_Age_2_bt <- (df.pred.housing$Housing_Age_2 * Housing_Age_2_scale_factor + Housing_Age_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.housing$min_se <- df.pred.housing$ml.value - ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.housing$max_se <- df.pred.housing$ml.value + ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.housing, aes(Housing_Age_bt, exp(ml.value))) + #transform out of log
+  geom_smooth(method="loess") +
+  geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) + #transform se out of log
+  xlab('Housing Age in Years') + ylab('P/A Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 20000), xlim = c(0,60))
+
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, log(NP_T)))
+# adds in points without controlling for anything
+
+### 5.2.1.6 % Grass Cover (Gamma) by housing age
+# gamma model won't run or converge with bootstrapping
+#Linear model shows flat effect
+
+# lets try gamma, but gamma can't take zeros.
+df %>% filter(Perc_Grass > 0) -> df_grass # 18 rows cut, less 1%
+
+# note that original gamma model won't converge so here I run a log gaussian lmer
+
+mod_6_main.boots <- lme4::lmer(log(Perc_Grass) ~ 
+                                 Population_Density + # fixed effects
+                                 Percent_Own + 
+                                 #Percent_Own_2 + 
+                                 Housing_Age + 
+                                 Housing_Age_2 +
+                                 Median_Household_Income + 
+                                 Median_Household_Income_2 + 
+                                 Percent_White +
+                                 Percent_Hispanic + 
+                                 Terrain_Roughness +
+                                 (1 | MSA),                               # random effects
+                               data = df_grass)
+summary(mod_6_main.boots)
+
+# generate new data for housing age to plot predicted values
+
+#Note different df, is now df_grass
+housing.span <- c(rep(seq(min(df_grass$Housing_Age),max(df_grass$Housing_Age), length=50))) # generate new data
+housing2.span <- (housing.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+df.pred.housing <- data.frame(Population_Density = mean(df_grass$Population_Density), # means of each var.
+                              Percent_Own = mean(df_grass$Percent_Own),
+                              #   Percent_Own_2 = mean(df_grass$Percent_Own_2), NOT IN MODEL
+                              Housing_Age = housing.span, # new span of housing age
+                              Housing_Age_2 = housing2.span, # new span of housing age
+                              Median_Household_Income = mean(df_grass$Median_Household_Income),
+                              Median_Household_Income_2 = mean(df_grass$Median_Household_Income_2),
+                              Percent_White = mean(df_grass$Percent_White),
+                              Percent_Hispanic = mean(df_grass$Percent_Hispanic),
+                              Terrain_Roughness = mean(df_grass$Terrain_Roughness),
+                              MSA = NA) # setting MSA as neutral, so we see the mean for all MSAs
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.housing <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.housing, re.form = NA)   # this is predict.merMod 
+}
+
+df.pred.housing$ml.value <- predict.fun.housing(mod_6_main.boots) # run function (see 5.2.1)
+mod_6_main_boots_housing <- bootMer(mod_6_main.boots, predict.fun.housing, nsim = 1000)
+df.pred.housing <- cbind(df.pred.housing, confint(mod_6_main_boots_housing))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Housing_Age_scale_factor <- attr(df$Housing_Age, 'scaled:scale') # 16.92731 find scale and center factors
+Housing_Age_center_factor <- attr(df$Housing_Age, 'scaled:center') # 32.85529
+Housing_Age_2_scale_factor <- attr(df$Housing_Age_2, 'scaled:scale') # 1179.27054
+Housing_Age_2_center_factor <- attr(df$Housing_Age_2, 'scaled:center') # 1365.94922
+
+# backtransform preds
+df.pred.housing$Housing_Age_bt <- (df.pred.housing$Housing_Age * Housing_Age_scale_factor + Housing_Age_center_factor)
+df.pred.housing$Housing_Age_2_bt <- (df.pred.housing$Housing_Age_2 * Housing_Age_2_scale_factor + Housing_Age_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.housing$min_se <- df.pred.housing$ml.value - ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.housing$max_se <- df.pred.housing$ml.value + ((df.pred.housing$`97.5 %` - df.pred.housing$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.housing, aes(Housing_Age_bt, exp(ml.value))) + #transform out of log
+  geom_smooth(method="loess") +
+  geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) + #transform se out of log
+  xlab('Housing Age in Years') + ylab('% Grass') + theme_classic() +
+  coord_cartesian(ylim = c(0, 50), xlim = c(0,60))
+summary(mod_6_main) #Mod with Gamma, doesn't seem to converge
+summary(mod_6_main.boots) #Linear does converge but housing age is n.s.
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, log(NP_T)))
+# adds in points without controlling for anything
+
+
+### 5.2.2 Population Density
+
+### 5.2.2.1 Population Density vs. CV Tree Cover (only squared one for pop dens)
+
+
+df %>% filter(CV_T > 0) -> df_CV_T
+
+df_CV_T$Population_Density_2 <- df_CV_T$Population_Density*df_CV_T$Population_Density
+
+mod_4_main.boots <- lme4::lmer(log(CV_T) ~ 
+                                 Population_Density + # fixed effects
+                                 Population_Density_2 +
+                                 Percent_Own + 
+                                 Percent_Own_2 + 
+                                 Housing_Age + 
+                                 Housing_Age_2 +
+                                 Median_Household_Income + 
+                                 Median_Household_Income_2 + 
+                                 Percent_White +
+                                 Percent_Hispanic + 
+                                 Terrain_Roughness +
+                                 (1 | MSA),                               # random effects
+                               data = df_CV_T)
+
+
+# generate new data for housing age to plot predicted values
+
+Population_Density.span <- c(rep(seq(min(df_CV_T$Population_Density),max(df_CV_T$Population_Density), length=50))) # generate new data
+Population_Density2.span <- (Population_Density.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+df.pred.popdens <- data.frame(Population_Density = Population_Density.span,
+                              Population_Density_2 = Population_Density2.span,
+                              Percent_Own = mean(df_CV_T$Percent_Own), # means of each var.
+                              Percent_Own_2 = mean(df_CV_T$Percent_Own_2),
+                              Housing_Age = mean(df_CV_T$Housing_Age), # new span of housing age
+                              Housing_Age_2 = mean(df_CV_T$Housing_Age_2), # new span of housing age
+                              Median_Household_Income = mean(df_CV_T$Median_Household_Income),
+                              Median_Household_Income_2 = mean(df_CV_T$Median_Household_Income_2),
+                              Percent_White = mean(df_CV_T$Percent_White),
+                              Percent_Hispanic = mean(df_CV_T$Percent_Hispanic),
+                              Terrain_Roughness = mean(df_CV_T$Terrain_Roughness),
+                              MSA = NA) # setting MSA as neutral, so we see the mean for all MSAs
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.popdens <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.popdens, re.form = NA)   # this is predict.merMod 
+}
+
+df.pred.popdens$ml.value <- predict.fun.popdens(mod_4_main.boots) # run function (see 5.2.1)
+mod_4_main_boots_popdens <- bootMer(mod_4_main.boots, predict.fun.popdens, nsim = 1000)
+df.pred.popdens <- cbind(df.pred.popdens, confint(mod_4_main_boots_popdens))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Population_Density_scale_factor <- attr(df_CV_T$Population_Density, 'scaled:scale') # find scale and center factors
+Population_Density_center_factor <- attr(df_CV_T$Population_Density, 'scaled:center')
+Population_Density_2_scale_factor <- (attr(df_CV_T$Population_Density, 'scaled:scale'))^2
+Population_Density_2_center_factor <- (attr(df_CV_T$Population_Density, 'scaled:center'))^2
+
+# backtransform preds
+df.pred.popdens$Population_Density_bt <- (df.pred.popdens$Population_Density * Population_Density_scale_factor + Population_Density_center_factor)
+df.pred.popdens$Population_Density_2_bt <- (df.pred.popdens$Population_Density_2 * Population_Density_2_scale_factor + Population_Density_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.popdens$min_se <- df.pred.popdens$ml.value - ((df.pred.popdens$`97.5 %` - df.pred.popdens$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.popdens$max_se <- df.pred.popdens$ml.value + ((df.pred.popdens$`97.5 %` - df.pred.popdens$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.popdens, aes(Population_Density_bt, exp(ml.value))) + #transform out of log
+  geom_smooth(method="loess") +
+  geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) + #transform se out of log
+  xlab('Population Density by Census Block Group') + ylab('C/V Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 600), xlim = c(0,23000))
+
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, log(NP_T)))
+# adds in points without controlling for anything
+
+
+### 5.2.3 Median Household Income
+
+### 5.2.3.1 Median Household Income vs. % Tree Cover
+
+# generate new data for housing age to plot predicted values
+
+income.span <- c(rep(seq(min(df$Median_Household_Income),max(df$Median_Household_Income), length=50))) # generate new data
+income2.span <- (income.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+df.pred.income <- data.frame(Population_Density = mean(df$Population_Density), # means of each var.
+                              Percent_Own = mean(df$Percent_Own),
+                              Percent_Own_2 = mean(df$Percent_Own_2),
+                              Housing_Age = mean(df$Housing_Age),
+                              Housing_Age_2 = mean(df$Housing_Age_2), 
+                              Median_Household_Income = income.span,  # new span of income
+                              Median_Household_Income_2 = income2.span, # new span of income2
+                              Percent_White = mean(df$Percent_White),
+                              Percent_Hispanic = mean(df$Percent_Hispanic),
+                              Terrain_Roughness = mean(df$Terrain_Roughness),
+                              MSA = NA) # setting MSA as neutral, so we see the mean for all MSAs
+
+# plot **predicted** housing age graph using means for other variables to visualize relationship
+
+# here's the model again
+
+mod_1_main.boots <- lme4::lmer(Perc_Tree ~
+                                 Population_Density + # fixed effects
+                                 Percent_Own + 
+                                 Percent_Own_2 + 
+                                 Housing_Age + 
+                                 Housing_Age_2 +
+                                 Median_Household_Income + 
+                                 Median_Household_Income_2 + 
+                                 Percent_White +
+                                 Percent_Hispanic + 
+                                 Terrain_Roughness +
+                                 (1 | MSA),                               # random effects
+                               data = df)
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.income <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.income, re.form = NA)   # this is predict.merMod 
+}
+
+df.pred.income$ml.value <- predict.fun.income(mod_1_main.boots) # run function (see 5.2.1)
+mod_1_main_boots_income <- bootMer(mod_1_main.boots, predict.fun.income, nsim = 1000)
+df.pred.income <- cbind(df.pred.income, confint(mod_1_main_boots_income))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Median_Household_Income_scale_factor <- attr(df$ Median_Household_Income, 'scaled:scale') # find scale and center factors
+Median_Household_Income_center_factor <- attr(df$ Median_Household_Income, 'scaled:center')
+Median_Household_Income_2_scale_factor <- attr(df$ Median_Household_Income_2, 'scaled:scale')
+Median_Household_Income_2_center_factor <- attr(df$ Median_Household_Income_2, 'scaled:center')
+
+# backtransform preds
+df.pred.income$ Median_Household_Income_bt <- (df.pred.income$ Median_Household_Income *  Median_Household_Income_scale_factor +  Median_Household_Income_center_factor)
+df.pred.income$ Median_Household_Income_2_bt <- (df.pred.income$ Median_Household_Income_2 *  Median_Household_Income_2_scale_factor +  Median_Household_Income_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.income$min_se <- df.pred.income$ml.value - ((df.pred.income$`97.5 %` - df.pred.income$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.income$max_se <- df.pred.income$ml.value + ((df.pred.income$`97.5 %` - df.pred.income$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.income, aes(Median_Household_Income_bt*1000, ml.value)) +
+  geom_smooth(method="loess") +
+  geom_ribbon(aes(ymin = min_se, ymax = max_se), alpha = 0.2) +
+  xlab('Median Household Income') + ylab('Model Predicted Percent Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 35), xlim = c(0,210000))
+
+#  geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, Perc_Tree))
+
+# adds in points without controlling for anything
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, Perc_Tree))
+
+### 5.2.3.2 Median Household Income vs. MPA Tree Cover w/o PHX
+
+df %>% filter(MPA_T > 0) -> df_MPA_T # just 22 rows (<1%) dropped
+
+df_MPA_T %>% filter(MSA == 'PHX') -> df_MPA_T_PHX  # PHOENIX data
+df_MPA_T %>% filter(MSA != 'PHX') -> df_MPA_T_OTH  # all other data
+
+mod <- lme4::glmer(MPA_T ~ 
+                     Population_Density + # fixed effects
+                     Percent_Own + 
+                     #Percent_Own_2 + 
+                     Housing_Age + 
+                     Housing_Age_2 +
+                     Median_Household_Income + 
+                     Median_Household_Income_2 + 
+                     Percent_White +
+                     Percent_Hispanic + 
+                     Terrain_Roughness +
+                     (1 | MSA),                               # random effects
+                   data = df_MPA_T_OTH, 
+                   family=Gamma(link="log")) # family of glm
+
+plot_model(mod, type = 'diag') # diagnostics
+result <- check_distribution(mod); result # VERY BAD
+# I think we can live with this model. 
+
+# # Model3main. Tree MPA
+# lets keep this model
+mod_3_main.boots <- mod
+
+
+mod.phx <- glm(MPA_T ~ # note this is NOT a mixed model
+                 Population_Density + # fixed effects
+                 Percent_Own + 
+                 #Percent_Own_2 + 
+                 Housing_Age + 
+                 Housing_Age_2 +
+                 Median_Household_Income + 
+                 Median_Household_Income_2 + 
+                 Percent_White +
+                 Percent_Hispanic + 
+                 Terrain_Roughness, # +
+               #(1 | MSA),                               # random effects TURNED OFF
+               data = df_MPA_T_PHX, 
+               family=Gamma(link="log")) # family of glm
+
+# TODO figure out why this doesn't work
+plot_model(mod.phx, type = 'diag') # diagnostics 
+result <- check_distribution(mod.phx); result # VERY BAD
+# I think we can live with this model. 
+df_MPA_T$MSA
+# # Model3main. Tree MPA
+# lets keep this model
+mod_3b_main.boots <- mod.phx
+summary(mod_3_main.boots)
+
+# generate new data for housing age to plot predicted values
+
+#Note that for this particular model, the df is now df_MPA_T_PHX for each
+income.span <- c(rep(seq(min(df_MPA_T_OTH$Median_Household_Income), max(df_MPA_T_OTH$Median_Household_Income), length=50))) # generate new data
+income2.span <- (income.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+#Note that for this particular model, the df is now df_MPA_T_PHX for each
+
+df.pred.income <- data.frame(Population_Density = mean(df_MPA_T_OTH$Population_Density), # means of each var.
+                              Percent_Own = mean(df_MPA_T_OTH$Percent_Own),
+                              # Percent_Own_2 = mean(df_MPA_T_OTH$Percent_Own_2),
+                              Housing_Age = mean(df_MPA_T_OTH$Housing_Age), # new span of housing age
+                              Housing_Age_2 = mean(df_MPA_T_OTH$Housing_Age_2), # new span of housing age
+                              Median_Household_Income = income.span,
+                              Median_Household_Income_2 = income2.span,
+                              Percent_White = mean(df_MPA_T_OTH$Percent_White),
+                              Percent_Hispanic = mean(df_MPA_T_OTH$Percent_Hispanic),
+                              Terrain_Roughness = mean(df_MPA_T_OTH$Terrain_Roughness),
+                              MSA = NA) #Nonspecified MSA
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.income <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.income, re.form = NA)   # this is predict.glm, not for mixed models
+}
+
+df.pred.income$ml.value <- predict.fun.income(mod_3_main.boots) # run function (see 5.2.1)
+mod_3_main_boots_income <- bootMer(mod_3_main.boots, predict.fun.income, nsim = 100) #Running 100 for now start 1:31
+df.pred.income <- cbind(df.pred.income, confint(mod_3_main_boots_income))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Income_scale_factor <- attr(df$Median_Household_Income, 'scaled:scale') # find scale and center factors
+Income_center_factor <- attr(df$Median_Household_Income, 'scaled:center')
+Income_2_scale_factor <- attr(df$Median_Household_Income_2, 'scaled:scale')
+Income_2_center_factor <- attr(df$Median_Household_Income_2, 'scaled:center')
+
+# backtransform preds
+df.pred.income$Income_bt <- (df.pred.income$Median_Household_Income * Income_scale_factor + Income_center_factor)
+df.pred.income$Income_2_bt <- (df.pred.income$Median_Household_Income * Income_2_scale_factor + Income_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.income$min_se <- df.pred.income$ml.value - ((df.pred.income$`97.5 %` - df.pred.income$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.income$max_se <- df.pred.income$ml.value + ((df.pred.income$`97.5 %` - df.pred.income$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.income, aes(Income_bt*1000, ml.value)) + #transform out of log
+  geom_smooth(method="loess", se = FALSE) +
+  # geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) + #transform se out of log
+  xlab('Median Household Income') + ylab('Log MPA Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(-3.5, 2), xlim = c(0,200000))
+
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, log(NP_T)))
+# adds in points without controlling for anything
+
+
+### 5.2.3.3 Median Household Income vs. CV Tree Cover
+
+df %>% filter(CV_T > 0) -> df_CV_T
+
+df_CV_T$Population_Density_2 <- df_CV_T$Population_Density*df_CV_T$Population_Density
+
+mod_4_main.boots <- lme4::lmer(log(CV_T) ~ 
+                                 Population_Density + # fixed effects
+                                 Population_Density_2 +
+                                 Percent_Own + 
+                                 Percent_Own_2 + 
+                                 Housing_Age + 
+                                 Housing_Age_2 +
+                                 Median_Household_Income + 
+                                 Median_Household_Income_2 + 
+                                 Percent_White +
+                                 Percent_Hispanic + 
+                                 Terrain_Roughness +
+                                 (1 | MSA),                               # random effects
+                               data = df_CV_T)
+
+# generate new data for housing age to plot predicted values
+
+income.span <- c(rep(seq(min(df_CV_T$Median_Household_Income),max(df_CV_T$Median_Household_Income), length=50))) # generate new data
+income2.span <- (income.span^2)
+
+# create new data dataframe with all else held at means, only housing age varies
+
+df.pred.income <- data.frame(Population_Density = mean(df_CV_T$Population_Density), # means of each var.
+                             Population_Density_2 = mean(df_CV_T$Population_Density_2),
+                             Percent_Own = mean(df_CV_T$Percent_Own),
+                             Percent_Own_2 = mean(df_CV_T$Percent_Own_2),
+                             Housing_Age = mean(df_CV_T$Housing_Age),
+                             Housing_Age_2 = mean(df_CV_T$Housing_Age_2), 
+                             Median_Household_Income = income.span,  # new span of income
+                             Median_Household_Income_2 = income2.span, # new span of income2
+                             Percent_White = mean(df_CV_T$Percent_White),
+                             Percent_Hispanic = mean(df_CV_T$Percent_Hispanic),
+                             Terrain_Roughness = mean(df_CV_T$Terrain_Roughness),
+                             MSA = NA) # setting MSA as neutral, so we see the mean for all MSAs
+
+# plot **predicted** housing age graph using means for other variables to visualize relationship
+
+# make predictions with 1000 bootstraps for GLM, use to get confidence intervals
+# generate function for prediction ml predicted values
+predict.fun.income <- function(my.lmm) {
+  predict(my.lmm, newdata = df.pred.income, re.form = NA)   # this is predict.merMod 
+}
+
+df.pred.income$ml.value <- predict.fun.income(mod_4_main.boots) # run function (see 5.2.1)
+mod_4_main_boots_income <- bootMer(mod_4_main.boots, predict.fun.income, nsim = 1000)
+df.pred.income <- cbind(df.pred.income, confint(mod_4_main_boots_income))
+
+# note: housing values are scaled/centered, need to backtransform for interpretation
+Median_Household_Income_scale_factor <- attr(df_CV_T$Median_Household_Income, 'scaled:scale') # find scale and center factors
+Median_Household_Income_center_factor <- attr(df_CV_T$Median_Household_Income, 'scaled:center')
+Median_Household_Income_2_scale_factor <- attr(df_CV_T$Median_Household_Income_2, 'scaled:scale')
+Median_Household_Income_2_center_factor <- attr(df_CV_T$Median_Household_Income_2, 'scaled:center')
+
+# backtransform preds
+df.pred.income$Median_Household_Income_bt <- (df.pred.income$Median_Household_Income * Median_Household_Income_scale_factor + Median_Household_Income_center_factor)
+df.pred.income$Median_Household_Income_2_bt <- (df.pred.income$Median_Household_Income_2 * Median_Household_Income_2_scale_factor + Median_Household_Income_2_center_factor)
+
+# generate standard error (se) from bootstrapped confidence intervals
+df.pred.income$min_se <- df.pred.income$ml.value - ((df.pred.income$`97.5 %` - df.pred.income$`2.5 %`)/3.92) # se from CI (divide by 3.92 for 95% CIs to get se)
+df.pred.income$max_se <- df.pred.income$ml.value + ((df.pred.income$`97.5 %` - df.pred.income$`2.5 %`)/3.92)
+
+# plot
+
+ggplot(df.pred.income, aes(Median_Household_Income_bt*1000, exp(ml.value))) +
+  geom_smooth(method="loess") +
+  geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) +
+  xlab('Median Household Income') + ylab('Log CV Tree Cover') + theme_classic() +
+  coord_cartesian(ylim = c(0, 600), xlim = c(0,210000))
+
+#  geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, Perc_Tree))
+
+# adds in points without controlling for anything
+# + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, Perc_Tree))
+
+### 5.2.3.4 Median Household Income vs. P/A Ratio Trees PHX only
+
+## HOLDING OFF, CODE IS WRONG
+
 
 
 
@@ -1795,7 +3622,7 @@ p_tree_mod <- glmmTMB::glmmTMB(I(Perc_Tree / 100) ~ Median_Household_Income + # 
                                  (1 | MSA),                               # random effects
                                data = df, list(family = 'beta', link = 'logit'))
 
-family = beta_family())
+family = beta_family()
 
 
 # FIXME LMER is 'wrong' because of the distribution of Perc_Tree - still need to fix this
