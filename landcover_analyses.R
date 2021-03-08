@@ -18,21 +18,22 @@
 # to cite all of the packages in one go. Search for "CITE THE PACKGES"
 
 # packages we'll be using
-packages <- c('tidyverse',   # this is actually a collection of packages
-              'sf',          # used for reading shapefiles
+packages <- c('tidyverse'   # this is actually a collection of packages
+              , 'sf'         # used for reading shapefiles
                              # lots of other great spatial functions, too, but we wont use them
-              'sjPlot',      # nice graphs and tables supporting many models
-              'lme4',        # fits multi-level models
-              'ggpubr',      # mixes base stats functions with ggplot graphics, its great!
-              'RColorBrewer',# good for colors
-              'cowplot',     # for multi-paned graphs NOTE THAT THIS MASKS ggplot2::ggsave()!!
-              'janitor',     # cleans things up
-              #'multcompView') # supports significance letters for multiple comparisons, helpful formattings
-              'psych',         # useful data summaries
-              'see',           # model diagnostics
-              'performance',   # model diagnostics
-              'tidylog')       # makes dplyr and tidyr very explicity
+              , 'sjPlot'      # nice graphs and tables supporting many models
+              , 'lme4'        # fits multi-level models
+              , 'ggpubr'      # mixes base stats functions with ggplot graphics, its great!
+              , 'RColorBrewer'# good for colors
+              , 'cowplot'     # for multi-paned graphs NOTE THAT THIS MASKS ggplot2::ggsave()!!
+              , 'janitor'     # cleans things up
+              , 'psych'         # useful data summaries
+              , 'see'           # model diagnostics
+              , 'tictoc'        # times things
+              , 'performance'   # model diagnostics
+              , 'tidylog')       # makes dplyr and tidyr very explicity
 
+              #'multcompView') # supports significance letters for multiple comparisons, helpful formattings
 
 # check for all of the libraries
 if (length(setdiff(packages, rownames(installed.packages()))) > 0) {
@@ -1668,7 +1669,7 @@ mod_5b_main <- mod
 
 
 # I think we can live with this model. 
-# graph it tk
+# graph it 
 p_fe <- plot_model(mod_5_main,                                 # save the model in "p_fe", short for Plot Fixed Effects
                    type = 'est',                                # more explcit that accepting the defaults
                    show.values = TRUE,
@@ -2672,7 +2673,11 @@ ggplot(df.pred.housing, aes(Housing_Age_bt, ml.value)) +
   geom_smooth(method="loess") +
   geom_ribbon(aes(ymin = min_se, ymax = max_se), alpha = 0.2) +
   xlab('Housing Age in Years') + ylab('Model Predicted Percent Tree Cover') + theme_classic() +
-  coord_cartesian(ylim = c(0, 35), xlim = c(0,60))
+  coord_cartesian(ylim = c(0, 35), xlim = c(0, 60)) + 
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_x_continuous(expand = c(0, 0)) +
+  NULL
+  
 
 #  geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, Perc_Tree))
 
@@ -2745,10 +2750,13 @@ df.pred.housing$max_se <- df.pred.housing$ml.value + ((df.pred.housing$`97.5 %` 
 # plot
 
 ggplot(df.pred.housing, aes(Housing_Age_bt, exp(ml.value))) + #transform out of log
-  geom_smooth(method="loess") +
+  geom_smooth(method="loess", se = FALSE) + #TODO apply to other graphs to prevent double ribbons
   geom_ribbon(aes(ymin = exp(min_se), ymax = exp(max_se)), alpha = 0.2) + #transform se out of log
   xlab('Housing Age in Years') + ylab('NP Tree Cover') + theme_classic() +
-  coord_cartesian(ylim = c(0, 10000), xlim = c(0,60))
+  coord_cartesian(ylim = c(0, 10000), xlim = c(0, 60)) + 
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_x_continuous(expand = c(0, 0)) +
+  NULL
 
 # + geom_point(alpha = 0.5, data = df, aes(HOUS_AGE, log(NP_T)))
 # adds in points without controlling for anything
@@ -2856,8 +2864,10 @@ predict.fun.housing <- function(my.lmm) {
   predict(my.lmm, newdata = df.pred.housing, re.form = NA)   # this is predict.glm, not for mixed models
 }
 
+tic() tk
 df.pred.housing$ml.value <- predict.fun.housing(mod_3_main.boots) # run function (see 5.2.1)
 mod_3_main_boots_housing <- bootMer(mod_3_main.boots, predict.fun.housing, nsim = 100) #Running 100 for now start 1:31
+toc(); beepr::beep()
 df.pred.housing <- cbind(df.pred.housing, confint(mod_3_main_boots_housing))
 
 # note: housing values are scaled/centered, need to backtransform for interpretation
