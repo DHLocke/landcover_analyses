@@ -14,6 +14,10 @@ df$x1 <- scale(df$x1, center = TRUE)
 df$x2 <- scale(df$x2, center = TRUE)
 df$x3 <- scale(df$x3, center = TRUE)
 
+# Get rid of scale attributes
+
+df <- lapply(df,c)
+
 # double check
 head(df); plot(df)
 
